@@ -45,7 +45,7 @@ Open `cf-ssa-dm-00b-master-scripts.do` and add your username to the `ClimateAnal
 **Run master script**
 ```
 * In Stata:
-do "dm/cf-ssa-dm-00b-master-scripts.do"
+do "dm/cf-ssa-dm-00-master.do"
 ```
 The master script will automatically execute the entire pipeline in sequence.
 
