@@ -59,8 +59,9 @@ The master script will automatically execute the entire pipeline in sequence.
 Climate_Change_and_Fertility_in_SSA/
 │
 ├── dm/                                    # Data management scripts
-│   ├── cf-ssa-dm-00a-master-setup-python-environment.sh
-│   ├── cf-ssa-dm-00b-master-scripts.do   # Master orchestration script
+|   ├── cf-ssa-dm-00-master.do             # Main execution script
+│   ├── cf-ssa-dm-00a-setup-python-env.sh
+│   ├── cf-ssa-dm-00b-helper-functions.do   
 │   │
 │   ├── cf-ssa-01a-clean-shapefile.py     # Shapefile cleaning
 │   │
