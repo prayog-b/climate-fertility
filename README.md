@@ -366,23 +366,27 @@ Level: Varies by country
 ### Common issues
 #### CDS API Authentication Fails
 **Error:** `API key not found`
+
 **Solution:**
 - Verify whether `.cdsapirc` file exists in your home directory
 - Check file format: must be `url` and `key` fields
 - Confirm API key is active on CDS website
 
 #### Out of memory errors (Python)
+
 **Solution:**
 - Process data in smaller chunks
 - Close other applications to free RAM
 - Use a machine with more memory
 
 #### Stata Dataset Too Large
+
 **Solution:**
 - Increase Stata memory: `set max_memory 32g`
 - Process countries separately
 
 #### Python Package Conflicts
+
 **Solution:**
 ```
 # Remove existing environment and recreate
@@ -392,6 +396,7 @@ bash cf-ssa-dm-00a-master-setup-python-environment.sh
 
 #### Missing gsutil
 **Error:** `gsutil: command not found`
+
 **Solution:** 
 - Install Google Cloud SDK:  https://cloud.google.com/sdk/docs/install
 - Authenticate: `gcloud auth login`
