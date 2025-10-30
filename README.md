@@ -50,7 +50,6 @@ do "dm/cf-ssa-dm-00-master.do"
 The master script will automatically execute the entire pipeline in sequence.
 
 
-## Project Structure 
 ## Project Structure
 
 <details>
