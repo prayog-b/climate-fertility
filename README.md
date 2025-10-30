@@ -1,6 +1,6 @@
 # Climate and Fertility in Sub-Saharan Africa
 
-This repository contains replication code for analyzing the relationship between climate change and fertility outcomes in Sub-Saharan Africa. The project combines high-resolution climate data (ERA5 reanalysis), crop phenology information (FAO), and census microdata from IPUMS to examine how temperature and precipitation patterns affect fertility decisions and human capital investment.
+This repository contains data documentation for the project. The project combines high-resolution climate data (ERA5 reanalysis), crop phenology information (FAO), and census microdata from IPUMS to examine how temperature and precipitation patterns affect fertility decisions and human capital investment.
 
 ---
 
@@ -163,17 +163,9 @@ Level: Varies by country
 
 
 # Detailed script documentation
-## Setup scripts
-`cf-ssa-dm-00a-master-setup-python-environment.sh`
-- **Purpose:** Initialize virtual Python environment and install dependencies
-- **Inputs:** None (creates new environment)
-- **Outputs:**
-  - `.venv/` directory
-  - `requirements.txt`
-  - `.gitignore`
-- **Notes:** Must update `PROJECT_DIR` variable before running
+## Master script
 
-`cf-ssa-dm-00b-master-scripts.do`
+`cf-ssa-dm-00-master.do`
 - **Purpose:** Master orchestration script for entire pipeline
 - **Key functions:**
   - `ClimateAnalysisConfig`: Sets user-specific directory paths
@@ -181,7 +173,26 @@ Level: Varies by country
   - `save_input`: Exports numbers to LaTeX
   - `verify_package`: Auto-installs missing Stata packages
 - **Usage:** Run once to execute full pipeline
-- **Required packages:** `reghdfe`
+- **Required packages:** 
+
+## Setup scripts
+`cf-ssa-dm-00a-setup-python-env.sh`
+- **Purpose:** Initialize virtual Python environment and install dependencies
+- **Inputs:** None (creates new environment)
+- **Outputs:**
+  - `.venv/` directory
+  - `requirements.txt`
+  - `.gitignore`
+- **Notes:** Must run `cf-ssa-dm-00-master.do` before running to set environment variables.
+
+`cf-ssa-dm-00b-helper-functions.do`
+- **Purpose:** Auxiliary functions used throughout project files.
+- **Key functions:**
+  - `print_timestamp`: Logs system information
+  - `save_input`: Exports numbers to LaTeX
+  - `verify_package`: Auto-installs missing Stata packages
+- **Usage:** Run once to set up
+
 
 ## Data Processing Scripts:
 ### Stage 1: Shapefile cleaning 
@@ -391,5 +402,5 @@ bash cf-ssa-dm-00a-master-setup-python-environment.sh
 - FAO phenology data: FAO GIEWS ASIS
 - Census data: IPUMS International
 
-**Last updated:** October 27, 2025
+**Last updated:** October 30, 2025
 
