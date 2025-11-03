@@ -324,6 +324,10 @@ Level: Varies by country
 - **Final Output:** Analysis-ready dataset with individual-level census data linked to lifetime weather exposure.
 
 
+### Stage 7: Creating analysis datasets
+#### Script 7a: `cf-ssa-dm-07a-append-smallest-at-geolev2.do`
+- **Purpose:** Append the country-level census-climate merged datasets into a combined dataset. 
+
 
 ## Output Files
 ### Intermediate Outputs
