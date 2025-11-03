@@ -24,25 +24,8 @@ This repository contains data documentation for the project. The project combine
 - Authenticate with Google account for FAO data downloads
 
 ## Quick Start Guide
-**Set Up Python Environment**
-```
-cd dm
-bash cf-ssa-dm-00a-master-setup-python-environment.sh
-```
-**Note:** Before running, update the `PROJECT_DIR` variable in the script to match your local directory path.
-
-This script will:
-- Create a Python virtual environment at `.venv/`
-- Install all required packages
-- Register a Jupyter kernel named "Climate Fertility Env"
-- Generate `requirements.txt`
-- Create `.gitignore` with appropriate exclusions
-
-
-**Configure User Settings**
-Open `cf-ssa-dm-00b-master-scripts.do` and add your username to the `ClimateAnalysisConfig` program (lines 18-49) if you're not already listed.
-
-**Run master script**
+**Set up Project Globals Environment**
+Open `cf-ssa-dm-00-master.do`, and add your username to the `ClimateAnalysisConfig` program if you're not already listed. 
 ```
 * In Stata:
 do "dm/cf-ssa-dm-00-master.do"
@@ -183,7 +166,7 @@ Level: Varies by country
   - `.venv/` directory
   - `requirements.txt`
   - `.gitignore`
-- **Notes:** Must run `cf-ssa-dm-00-master.do` before running to set environment variables.
+- **Notes:** Run `cf-ssa-dm-00-master.do` before running to set environment variables.
 
 `cf-ssa-dm-00b-helper-functions.do`
 - **Purpose:** Auxiliary functions used throughout project files.
@@ -191,7 +174,7 @@ Level: Varies by country
   - `print_timestamp`: Logs system information
   - `save_input`: Exports numbers to LaTeX
   - `verify_package`: Auto-installs missing Stata packages
-- **Usage:** Run once to set up
+- **Usage:** This do file is called in `cf-ssa-dm-00-master.do`.
 
 
 ## Data Processing Scripts:
