@@ -141,6 +141,7 @@ Then we load the raw shapefile data, which contains the full list of SMALLEST un
 ```
 
 ## Implementing the merge `cf-ssa-dm-06b-merge-implementation.do`
+### Implementation workflow
 This script brings in the building blocks from `cf-ssa-dm-06a` and simply creates a workflow to implement the merge for each country that we are studying. 
   ```stata
   local country_codes "BEN BWA BFA CMR ETH GHA GIN IVC KEN LSO LBR MWI MLI MOZ RWA SLE ZAF SEN SDN TZA TGO UGA ZMB ZWE"
@@ -164,3 +165,15 @@ This script brings in the building blocks from `cf-ssa-dm-06a` and simply create
   		}
   	}
   ```
+
+### Summarizing merge quality 
+We create two summary tables to document the quality of the merge between the census and climate datasets.
+```
+Overall merge results: $cf_overleaf/table/merge-results-table-`merge_var'.tex
+Breakdown of unmatched SMALLEST units: $cf_overleaf/table/merge-unmatched-smallest-analysis-`merge_var'.tex
+```
+
+
+
+
+
