@@ -1,0 +1,1544 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   16.1   Copyright 1985-2019 StataCorp LLC
+  Statistics/Data analysis            StataCorp
+                                      4905 Lakeway Drive
+     Special Edition                  College Station, Texas 77845 USA
+                                      800-STATA-PC        https://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Stata license: Single-user  perpetual
+Serial number: 401606328044
+  Licensed to: Eigen Platz
+               NUS
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. Maximum number of variables is set to 5,000; see help set_maxvar.
+
+. do cf-ssa-dm-11c-dhs-temp-genvar.do 
+
+. *****************************************************************************
+> ***
+. * PROJECT:              Climate Change and Fertility in Sub-Saharan Africa
+. * AUTHOR:               Prayog Bhattarai
+. * DATE MODIFIED:        2025-10-14
+. * DESCRIPTION:          DHS: Generate temperature variables using country cod
+> e mapping
+. * DEPENDENCIES:         
+. * 
+. * NOTES: We use the subunit-day data created in previous steps to generate 
+. *        subunit-cohort-dhsyear level temperature data
+. *        Output data is in data/derived/dhs/05-dhs-region-cohort-temperature/
+> `country_name'-dhs-cohort-temperature.dta
+. *****************************************************************************
+> ***
+. 
+. *****************************************************************************
+> ***
+. * Setup and Configuration
+. *****************************************************************************
+> ***
+. 
+. capture program drop ClimateAnalysisConfig
+
+. program define ClimateAnalysisConfig
+  1.     syntax, method(string)
+  2.     
+.     if "`method'" == "init" {
+  3.         di "Initializing configuration for user: `c(username)'"
+  4.         
+.         if "`c(username)'" == "prayogbhattarai" {
+  5.             global cf "/Users/`c(username)'/NUS Dropbox/Prayog Bhattarai/C
+> limate_Change_and_Fertility_in_SSA"
+  6.         }
+  7.         else if "`username'" == "prayog" {
+  8.             global cf "D:/`username'/NUS Dropbox/Prayog Bhattarai/Climate_
+> Change_and_Fertility_in_SSA"
+  9.         }
+ 10.         else if inlist("`c(username)'", "yogita") {
+ 11.             global cf "/Users/`c(username)'/NUS Dropbox/`c(username)'/Clim
+> ate_Change_and_Fertility_in_SSA"
+ 12.         }
+ 13.         else if inlist("`c(username)'", "celin", "CE.4875") {
+ 14.             global cf "/Users/`c(username)'/Dropbox/Climate_Change_and_Fer
+> tility_in_SSA"
+ 15.         }
+ 16.         else if inlist("`c(username)'", "yun") {
+ 17.             global cf "/Users/`c(username)'/Dropbox/Climate_Change_and_Fer
+> tility_in_SSA"
+ 18.         }
+ 19.         else {
+ 20.             di as error "Unknown user: `c(username)'. Set global cf manual
+> ly."
+ 21.             exit 198
+ 22.         }
+ 23.         
+.         di "Configuration successful:"
+ 24.         di "  Base directory: $cf"
+ 25.     }
+ 26. end
+
+. 
+. *****************************************************************************
+> ***
+. * Country Code to Name Mapping
+. *****************************************************************************
+> ***
+. 
+. capture program drop GetCountryName
+
+. program define GetCountryName, rclass
+  1.     syntax, code(string)
+  2.     
+.     * Define the mapping
+.     if "`code'" == "BEN" {
+  3.         local country_name "Benin"
+  4.     }
+  5.     else if "`code'" == "BFA" {
+  6.         local country_name "Burkina Faso"
+  7.     }
+  8.     else if "`code'" == "BDI" {
+  9.         local country_name "Burundi"
+ 10.     }
+ 11.     else if "`code'" == "CMR" {
+ 12.         local country_name "Cameroon"
+ 13.     }
+ 14.     else if "`code'" == "CAF" {
+ 15.         local country_name "Central African Republic"
+ 16.     }
+ 17.     else if "`code'" == "TCD" {
+ 18.         local country_name "Chad"
+ 19.     }
+ 20.     else if "`code'" == "COM" {
+ 21.         local country_name "Comoros"
+ 22.     }
+ 23.     else if "`code'" == "COG" {
+ 24.         local country_name "Congo"
+ 25.     }
+ 26.     else if "`code'" == "DRC" {
+ 27.         local country_name "Congo Democratic Republic"
+ 28.     }
+ 29.     else if "`code'" == "ETH" {
+ 30.         local country_name "Ethiopia"
+ 31.     }
+ 32.     else if "`code'" == "GAB" {
+ 33.         local country_name "Gabon"
+ 34.     }
+ 35.     else if "`code'" == "GMB" {
+ 36.         local country_name "The Gambia"
+ 37.     }
+ 38.     else if "`code'" == "GHA" {
+ 39.         local country_name "Ghana"
+ 40.     }
+ 41.     else if "`code'" == "GIN" {
+ 42.         local country_name "Guinea"
+ 43.     }
+ 44.     else if "`code'" == "IVC" {
+ 45.         local country_name "Ivory Coast"
+ 46.     }
+ 47.     else if "`code'" == "KEN" {
+ 48.         local country_name "Kenya"
+ 49.     }
+ 50.     else if "`code'" == "LSO" {
+ 51.         local country_name "Lesotho"
+ 52.     }
+ 53.     else if "`code'" == "LBR" {
+ 54.         local country_name "Liberia"
+ 55.     }
+ 56.     else if "`code'" == "MDG" {
+ 57.         local country_name "Madagascar"
+ 58.     }
+ 59.     else if "`code'" == "MWI" {
+ 60.         local country_name "Malawi"
+ 61.     }
+ 62.     else if "`code'" == "MLI" {
+ 63.                 local country_name "Mali"
+ 64.         }
+ 65.     else if "`code'" == "MOZ" {
+ 66.         local country_name "Mozambique"
+ 67.     }
+ 68.     else if "`code'" == "NMB" {
+ 69.         local country_name "Namibia"
+ 70.     }
+ 71.     else if "`code'" == "NER" {
+ 72.         local country_name "Niger"
+ 73.     }
+ 74.     else if "`code'" == "NGA" {
+ 75.         local country_name "Nigeria"
+ 76.     }
+ 77.     else if "`code'" == "RWA" {
+ 78.         local country_name "Rwanda"
+ 79.     }
+ 80.     else if "`code'" == "SEN" {
+ 81.         local country_name "Senegal"
+ 82.     }
+ 83.     else if "`code'" == "SLE" {
+ 84.         local country_name "Sierra Leone"
+ 85.     }
+ 86.     else if "`code'" == "ZAF" {
+ 87.         local country_name "South Africa"
+ 88.     }
+ 89.     else if "`code'" == "SWZ" {
+ 90.         local country_name "Swaziland"
+ 91.     }
+ 92.     else if "`code'" == "TZA" {
+ 93.         local country_name "Tanzania"
+ 94.     }
+ 95.     else if "`code'" == "TGO" {
+ 96.         local country_name "Togo"
+ 97.     }
+ 98.     else if "`code'" == "UGA" {
+ 99.         local country_name "Uganda"
+100.     }
+101.     else if "`code'" == "ZMB" {
+102.         local country_name "Zambia"
+103.     }
+104.     else if "`code'" == "ZWE" {
+105.         local country_name "Zimbabwe"
+106.     }
+107.     else {
+108.         local country_name ""
+109.     }
+110.     
+.     return local name "`country_name'"
+111. end
+
+. 
+. *****************************************************************************
+> ***
+. * Degree Days Calculator
+. *****************************************************************************
+> ***
+. 
+. capture program drop calculate_degree_days
+
+. program define calculate_degree_days
+  1.     syntax, lowerbound(real) upperbound(real) intervals(real)
+  2.     
+.     di "  Calculating degree days for thresholds `lowerbound'(`intervals')`up
+> perbound'"
+  3.     
+.     * Validate required temperature variables exist
+.     foreach var in temp_max temp_mean {
+  4.         capture confirm numeric variable `var'
+  5.         if _rc {
+  6.             di as error "    ERROR: Required variable `var' not found or n
+> ot numeric"
+  7.             exit 111
+  8.         }
+  9.     }
+ 10.     
+.     * Calculate degree days for each threshold (scaled by 100)
+.     * Note: unscaled = scaled * 100, so compute on the fly if needed
+.     * Uses capture to skip thresholds that already exist (allows multiple cal
+> ls)
+.     forvalues threshold = `lowerbound'(`intervals')`upperbound' {
+ 11.         foreach stat in max mean {
+ 12.             capture confirm variable temp_`stat'_dd_`threshold'
+ 13.             if _rc {
+ 14.                 qui gen temp_`stat'_dd_`threshold' = max(temp_`stat' - `th
+> reshold', 0) / 100
+ 15.                 label variable temp_`stat'_dd_`threshold' "Degree days abo
+> ve `threshold'C (`stat' temp), scaled by 100"
+ 16.             }
+ 17.         }
+ 18.     }
+ 19.     
+.     * Clean up original temperature variables
+.     di "  Degree days calculation completed"
+ 20. end
+
+. 
+. *****************************************************************************
+> ***
+. * Age Range Exposure Generator
+. *****************************************************************************
+> ***
+. 
+. capture program drop generate_age_range_exposure
+
+. program define generate_age_range_exposure
+  1.     
+.     di "  Generating age-specific temperature exposure variables"
+  2.     
+.     * Validate required variables
+.     foreach var in cohort year {
+  3.         capture confirm numeric variable `var'
+  4.         if _rc {
+  5.             di as error "    ERROR: Required variable `var' not found or n
+> ot numeric"
+  6.             exit 111
+  7.         }
+  8.     }
+  9.     
+.     * Calculate age and create age group indicators
+.     * ── Fine bins: six 5-year bins (configurable) ──
+.     local bin_starts "15 20 25 30 35 40"
+ 10.     local bin_ends   "19 24 29 34 39 44"
+ 11.     local bin_labels "15_19 20_24 25_29 30_34 35_39 40_44"
+ 12.     local n_bins : word count `bin_starts'
+ 13. 
+.     * ── Broad bins: two halves of the reproductive span ──
+.     local broad_starts "15 30"
+ 14.     local broad_ends   "29 44"
+ 15.     local broad_labels "15_29 30_44"
+ 16.     local n_broad : word count `broad_starts'
+ 17. 
+.     cap drop age
+ 18.     qui gen age = year - cohort
+ 19. 
+.     * Create fine-bin indicators
+.     forvalues i = 1/`n_bins' {
+ 20.         local s : word `i' of `bin_starts'
+ 21.         local e : word `i' of `bin_ends'
+ 22.         local lbl : word `i' of `bin_labels'
+ 23.         qui gen age_`lbl' = inrange(age, `s', `e')
+ 24.         label variable age_`lbl' "Ages `s'-`e' indicator"
+ 25.     }
+ 26. 
+.     * Create broad-bin indicators
+.     forvalues i = 1/`n_broad' {
+ 27.         local s : word `i' of `broad_starts'
+ 28.         local e : word `i' of `broad_ends'
+ 29.         local lbl : word `i' of `broad_labels'
+ 30.         qui gen age_`lbl' = inrange(age, `s', `e')
+ 31.         label variable age_`lbl' "Ages `s'-`e' indicator"
+ 32.     }
+ 33. 
+.     label variable age "Age in year"
+ 34. 
+.     * Create age-specific variants for all degree day variables
+.     qui ds temp_*_dd_*
+ 35.     local dd_vars "`r(varlist)'"
+ 36. 
+.     foreach var of local dd_vars {
+ 37.         * Fine bins
+.         forvalues i = 1/`n_bins' {
+ 38.             local s : word `i' of `bin_starts'
+ 39.             local e : word `i' of `bin_ends'
+ 40.             local lbl : word `i' of `bin_labels'
+ 41.             qui gen `var'_age_`lbl' = `var' * age_`lbl'
+ 42.             label variable `var'_age_`lbl' "`var' exposure ages `s'-`e'"
+ 43.         }
+ 44.         * Broad bins
+.         forvalues i = 1/`n_broad' {
+ 45.             local s : word `i' of `broad_starts'
+ 46.             local e : word `i' of `broad_ends'
+ 47.             local lbl : word `i' of `broad_labels'
+ 48.             qui gen `var'_age_`lbl' = `var' * age_`lbl'
+ 49.             label variable `var'_age_`lbl' "`var' exposure ages `s'-`e'"
+ 50.         }
+ 51.     }
+ 52.     
+.     di "  Age-specific exposure variables created"
+ 53. end
+
+. 
+. *****************************************************************************
+> ***
+. * Temperature Data Processing
+. *****************************************************************************
+> ***
+. capture program drop TemperatureDataProcessor
+
+. program define TemperatureDataProcessor
+  1.     syntax, method(string) country_code(string) [dhs_years(string) max_coh
+> ort(string)]
+  2. 
+.     * Get country name from code
+.     GetCountryName, code("`country_code'")
+  3.     local country_name "`r(name)'"
+  4. 
+.     if "`country_name'" == "" {
+  5.         di as error "ERROR: Unknown country code `country_code'"
+  6.         exit 198
+  7.     }
+  8. 
+.     if "`method'" == "load_and_aggregate" {
+  9.         di "    Loading and aggregating temperature data for `country_name
+> ' (`country_code')"
+ 10.         * Check if the country ERA data file exists
+.         local data_file "$cf/data/derived/dhs/02-dhs-region-daily-data/`count
+> ry_name'-era-dhs-region-day-1940-2023.dta"
+ 11.         di "     Looking for data file: `data_file'"
+ 12. 
+.         capture confirm file "`data_file'"
+ 13.         if _rc {
+ 14.             di as error "    ERROR: Data file for `country_name' not found
+> ."
+ 15.             exit 601
+ 16.         }
+ 17. 
+.         use "`data_file'", clear
+ 18.         
+.         qui count
+ 19.         di "    Loaded `r(N)' observations"
+ 20.         
+.         if r(N) == 0 {
+ 21.             di as error "    ERROR: ERA data file is empty"
+ 22.             exit 459
+ 23.         }
+ 24.         
+.         * Check required variables
+.         local required_vars "DHSREGEN DHS_code temp_max temp_mean day month y
+> ear"
+ 25.         foreach var of local required_vars {
+ 26.             capture confirm variable `var'
+ 27.             if _rc {
+ 28.                 di as error "    ERROR: Required variable `var' not found 
+> in data"
+ 29.                 exit 111
+ 30.             }
+ 31.         }
+ 32. 
+.         di "   Keeping variables we need"
+ 33.         keep DHSREGEN DHS_code temp_max temp_mean day month year
+ 34.         drop if missing(temp_max) | missing(temp_mean)
+ 35. 
+.         di "   Preparing to merge with crop phenology data"
+ 36.         decode DHSREGEN, gen(dhsreg_decoded)
+ 37.         destring dhsreg_decoded, replace
+ 38.         drop DHSREGEN
+ 39.         rename dhsreg_decoded DHSREGEN
+ 40. 
+.         preserve
+ 41.             local phenology_file "$cf/data/derived/dhs/03-dhs-fao-growing-
+> season/dhs-crop-phenology-summary-stats.csv"
+ 42.             di "    Looking for phenology file: `phenology_file'"
+ 43.             
+.             capture confirm file "`phenology_file'"
+ 44.             if _rc {
+ 45.                 di as error "    ERROR: Phenology file not found: `phenolo
+> gy_file'"
+ 46.                 exit 601
+ 47.             }
+ 48. 
+.             import delimited using "`phenology_file'", clear
+ 49.             qui count
+ 50.             di "    Loaded `r(N)' observations from phenology data"
+ 51. 
+.             di "   Looking for phenology data for: `country_name'"
+ 52.             ren (cntrynamee dhsregen dhs_code) (COUNTRY DHSREGEN DHS_code)
+ 53.             
+.             keep if COUNTRY == "`country_name'"
+ 54. 
+.             qui count
+ 55.             if r(N) == 0 {
+ 56.                 di as error "    ERROR: No phenology data found for `count
+> ry_name'"
+ 57.                 di          "    Creating empty phenology dataset"
+ 58.                 clear 
+ 59.                 gen DHS_code = .
+ 60.                 forvalues m = 1/12 {
+ 61.                     gen growing_month_`m' = 0
+ 62.                 }
+ 63.             }
+ 64.             else {
+ 65.                 di as text "    Found phenology data for `country_name' wi
+> th `r(N)' observations"
+ 66.                 keep DHSREGEN DHS_code growing_month_*
+ 67.             }
+ 68. 
+.             tempfile crop_phenology
+ 69.             save "`crop_phenology'"
+ 70.         restore
+ 71. 
+.         di "   Merging ERA and phenology data ..."
+ 72.         merge m:1 DHS_code using `crop_phenology'
+ 73.         di " Examining merge success ..."
+ 74.         tab _merge
+ 75.         drop _merge 
+ 76. 
+.         di "   Creating growing and non-growing season indicators ..."
+ 77.         gen byte gs = 0 
+ 78.         gen byte ngs = 0 
+ 79.         forvalues m = 1/12 {
+ 80.             capture confirm variable growing_month_`m'
+ 81.             if !_rc {
+ 82.                 replace gs = 1 if growing_month_`m' == 1 & month == `m'
+ 83.                 replace ngs = 1 if growing_month_`m' == 0 & month == `m'
+ 84.             }
+ 85.         }    
+ 86. 
+.         * Ensure DHS_code is numeric 
+.         capture confirm string variable DHS_code
+ 87.         if !_rc {
+ 88.             destring DHS_code, replace force
+ 89.         }
+ 90. 
+. 
+.         ** Create temperature bins 
+.         foreach var in temp_max {
+ 91.             * First bin: < 18
+.             gen `var'_less_18 = (`var' < 18)
+ 92.             
+.             * 3-degree bins: 18-21, 21-24, 24-27, 27-30, 30-33
+.             forvalues lower = 18(3)30 {
+ 93.                 local upper = `lower' + 3
+ 94.                 gen `var'_`lower'_`upper' = (`var' >= `lower' & `var' < `u
+> pper')
+ 95.             }
+ 96.             
+.             * Last bin: >= 33
+.             gen `var'_more_33 = (`var' >= 33)
+ 97.         }
+ 98. 
+.         egen temp_max_sum = rowtotal(temp_max_less_18 temp_max_18_21 temp_max
+> _21_24 ///
+>                               temp_max_24_27 temp_max_27_30 temp_max_30_33 te
+> mp_max_more_33)
+ 99. 
+.         * Should equal 1 for all non-missing temp_max
+.         assert temp_max_sum == 1 if !missing(temp_max)
+100.         
+.         * Check for any missing temperatures
+.         count if missing(temp_max)
+101.         if r(N) > 0 {
+102.             di as error "Warning: `r(N)' observations have missing temp_ma
+> x"
+103.         }
+104. 
+.         drop temp_max_sum
+105. 
+.         di "    Calculating degree days ..."
+106.         calculate_degree_days, lowerbound(24) upperbound(38) intervals(2)
+107.         calculate_degree_days, lowerbound(26) upperbound(30) intervals(1)
+108. 
+.         di "    Creating growing/non-growing season variants ..."
+109.         qui ds temp_*_dd_*
+110.         local dd_vars "`r(varlist)'"
+111. 
+.         foreach var of local dd_vars {
+112.             qui gen `var'_gs = `var' * gs
+113.             qui gen `var'_ngs = `var' * ngs
+114. 
+.             label variable `var'_gs "`var'  growing season"
+115.             label variable `var'_ngs "`var'  non-growing season"
+116.         }
+117. 
+.         di "      Collapsing to annual level ..."
+118.         ds temp_*_dd_* temp_max_less_18 temp_max_18_21 temp_max_21_24 temp
+> _max_24_27 temp_max_27_30 temp_max_30_33 temp_max_more_33
+119.         local all_temp_vars "`r(varlist)'"
+120. 
+.         collapse (sum) `all_temp_vars' (mean) temp_mean (max) temp_max, by(DH
+> S_code DHSREGEN year)
+121.         recast float year 
+122. 
+.         egen days_per_year = rowtotal(temp_max_less_18 temp_max_18_21 temp_ma
+> x_21_24 ///
+>                               temp_max_24_27 temp_max_27_30 temp_max_30_33 te
+> mp_max_more_33)
+123. 
+.         * Summary statistics
+.         sum days_per_year
+124.         tab days_per_year
+125. 
+.         * Check for years with < 365 days
+.         count if days_per_year < 365
+126.         list year days_per_year if days_per_year < 365
+127. 
+. 
+.         qui count 
+128.         di "   Annual data has `r(N)' observations"
+129. 
+.         * Create directory if it doesn't exist
+.         capture mkdir "$cf/data/derived/dhs/05-dhs-region-cohort-temperature/
+> 01-annual-data"
+130.         local save_file "$cf/data/derived/dhs/05-dhs-region-cohort-tempera
+> ture/01-annual-data/`country_name'-temperature_annual.dta"
+131. 
+.         di "    Saving to: `save_file' ..."
+132.         save "`save_file'", replace 
+133.         di "Annual temperature data saved successfully."
+134.     }       
+135. end 
+
+. 
+. *****************************************************************************
+> ***
+. * Cohort Metrics Calculator (Temperature)
+. *****************************************************************************
+> ***
+. 
+. capture program drop CohortMetricsCalculator
+
+. program define CohortMetricsCalculator
+  1.     syntax, country_code(string) [reproductive_span(real 30) dhs_year(real
+>  2020) save_file(string)]
+  2. 
+.     di "     Calculating cohort metrics for DHS year: `dhs_year' with reprodu
+> ctive span `reproductive_span' years"
+  3. 
+.     * Get country name from code 
+.     GetCountryName, code("`country_code'")
+  4.     local country_name "`r(name)'"
+  5. 
+.     if "`country_name'" == "" {
+  6.         di as error "ERROR: Unknown country code `country_code'"
+  7.         exit 198
+  8.     }
+  9. 
+.     * Check current dataset
+.     qui count
+ 10.     di "    Starting with `r(N)' observations"
+ 11.     di "    Generating age variables"
+ 12. 
+.     generate_age_range_exposure
+ 13. 
+.     di "    Collapsing to cohort level ..."
+ 14. 
+.     * Get all temperature variables
+.     qui ds temp_*_dd_* temp_max_less_18 temp_max_18_21 temp_max_21_24 temp_ma
+> x_24_27 temp_max_27_30 temp_max_30_33 temp_max_more_33
+ 15.     local temp_vars "`r(varlist)'"
+ 16. 
+.     if "`temp_vars'" == "" {
+ 17.         di as error "    ERROR: No temperature variables found for cohort 
+> aggregation"
+ 18.         exit 459
+ 19.     }
+ 20. 
+.     collapse (sum) `temp_vars' (mean) temp_mean (max) temp_max, by(DHS_code D
+> HSREGEN cohort)
+ 21. 
+.     * After second collapse to cohort level
+.     egen total_days = rowtotal(temp_max_less_18 temp_max_18_21 temp_max_21_24
+>  temp_max_24_27 temp_max_27_30 temp_max_30_33 temp_max_more_33)
+ 22.     di "Summary of total days"
+ 23.     sum total_days if cohort <= 1976
+ 24. 
+.     * Diagnostic checks at cohort level:
+.     scatter total_days cohort
+ 25.     gen years_coverage = total_days / 365.25
+ 26.     sum years_coverage
+ 27.     sum cohort if years_coverage < 30
+ 28.     local min_cohort = r(min)
+ 29.     list cohort total_days years_coverage if cohort == `min_cohort'
+ 30. 
+.     gen int_year = `dhs_year'
+ 31. 
+.     local save_file "$cf/data/derived/dhs/05-dhs-region-cohort-temperature/02
+> -dhs-year-metrics/`country_code'-dhs-metrics-`dhs_year'.dta"
+ 32. 
+.     local output_path "`save_file'"
+ 33.     di "    Saving cohort metrics to: `output_path' ..."
+ 34. 
+.     save "`output_path'", replace
+ 35.     qui count
+ 36.     di "Cohort metrics saved successfully with `r(N)' observations."
+ 37. end 
+
+. 
+. *****************************************************************************
+> ***
+. * Census Selection
+. *****************************************************************************
+> ***
+. 
+. capture program drop CensusSelector
+
+. program define CensusSelector
+  1.     syntax, country_code(string) [log_file(string)]
+  2. 
+.     gen age_in_dhs_year = int_year - cohort 
+  3. 
+.     bys DHS_code cohort: egen max_age_observed = max(age_in_dhs_year)
+  4.     gen cohort_reaches_reproductive = (max_age_observed >= 15)
+  5. 
+.     gen exposure_years = max(0, min(age_in_dhs_year, 44) - 15 + 1)
+  6.     replace exposure_years = 0 if age_in_dhs_year < 15
+  7. 
+.     gen full_exposure = (exposure_years >= 30)
+  8. 
+.     drop max_age_observed
+  9. 
+. end 
+
+. 
+. 
+. *****************************************************************************
+> ***
+. * Main Temperature Workflow
+. *****************************************************************************
+> ***
+. capture program drop TemperatureAnalysisWorkflow
+
+. program define TemperatureAnalysisWorkflow
+  1.     syntax, method(string) country_code(string) [dhs_years(string) max_coh
+> ort(string) reproductive_span(real 30) cleanup(string) temp_files(string) tar
+> get_age(real 45)]
+  2. 
+.     * Get country name from code 
+.     GetCountryName, code("`country_code'")
+  3.     local country_name "`r(name)'"
+  4. 
+.     if "`country_name'" == "" {
+  5.         di as error "ERROR: Unknown country code `country_code'"
+  6.         exit 198
+  7.     }
+  8. 
+.     if "`method'" == "run_full_analysis" {
+  9.         di ""
+ 10.         di "==== Starting temperature analysis for `country_name' (`countr
+> y_code') ===="
+ 11. 
+.         ClimateAnalysisConfig, method(init)
+ 12. 
+.         * Check for DHS country to years mapping file
+.         preserve 
+ 13.             local mapping_file "$cf/data/derived/dhs/00-dhs-country-survey
+> year-mappings/surveycd_reg_year.dta"
+ 14.             di "   Checking DHS mapping file: `mapping_file' ..."
+ 15. 
+.             capture confirm file "`mapping_file'"
+ 16.             if _rc {
+ 17.                 di as error "   ERROR: DHS country to years mapping file n
+> ot found."
+ 18.                 restore 
+ 19.                 exit 601
+ 20.             }
+ 21. 
+.             use "`mapping_file'", clear
+ 22.             qui count
+ 23.             di "   Loaded `r(N)' observations from DHS mapping file"
+ 24.             * Some countries have different names in the mapping file vs. 
+> the ERA5 data files
+.             local mapping_cname "`country_name'"
+ 25.             if "`country_name'" == "Ivory Coast" local mapping_cname "Cote
+>  d'Ivoire"
+ 26.             di "   Keeping only the records for `mapping_cname' ..."
+ 27.             keep if COUNTRY == "`mapping_cname'"
+ 28.             di "Filtered to `country_name'"
+ 29. 
+.             qui count 
+ 30.             if r(N) == 0 {
+ 31.                 di as error "   ERROR: No DHS survey years found for `coun
+> try_name' in mapping file."
+ 32.                 restore 
+ 33.                 exit 459
+ 34.             }
+ 35.             ren year int_year 
+ 36.             levelsof int_year , local(dhs_years) 
+ 37.             local n_dhsyears = wordcount("`dhs_years'")
+ 38.             di "   Found `n_dhsyears' DHS survey years for `country_name'"
+ 39.         restore 
+ 40. 
+.         * Step 1: Load and aggregate temperature data
+.         capture noisily TemperatureDataProcessor, method("load_and_aggregate"
+> ) country_code("`country_code'")
+ 41.         if _rc {
+ 42.             di as error "   ERROR: Temperature data processing failed for 
+> `country_name'"
+ 43.             exit _rc
+ 44.         }
+ 45. 
+.         * Step 2: Process cohort metrics by DHS year 
+.         di "   Processing cohort metrics by DHS year ..."
+ 46.         local temp_files ""
+ 47.         local dhs_num = 0 
+ 48.         foreach dhs_year in `dhs_years' { 
+ 49.             local ++dhs_num
+ 50.             di   "   DHS year `dhs_num'/`n_dhsyears': `dhs_year' ..."
+ 51. 
+.             * Check cohort file
+.             local cohort_file "$cf/data/derived/dhs/00-dhs-country-surveyyear
+> -mappings/dhs-cohort-year.dta"
+ 52.             capture confirm file "`cohort_file'"
+ 53.             if _rc {
+ 54.                 di as error "   ERROR: Cohort year file not found: `cohort
+> _file'"
+ 55.                 continue
+ 56.             }
+ 57. 
+.             use "`cohort_file'", clear
+ 58.             keep if year <= `dhs_year'
+ 59.             keep if cohort <= `dhs_year' - 15
+ 60. 
+.             su cohort
+ 61.             list if cohort == 2005 & year == 2020
+ 62. 
+.             qui count 
+ 63.             di "      Cohort-year combinations: `r(N)'"
+ 64.             
+.             if r(N) == 0 {
+ 65.                 di "      WARNING: No valid cohort-year combinations for D
+> HS `dhs_year'"
+ 66.                 continue
+ 67.             }
+ 68.             
+.             local temp_file "$cf/data/derived/dhs/05-dhs-region-cohort-temper
+> ature/01-annual-data/`country_name'-temperature_annual.dta"
+ 69. 
+.             capture confirm file "`temp_file'"
+ 70.             if _rc {
+ 71.                 di as error "   ERROR: Temperature file not found: `temp_f
+> ile'"
+ 72.                 continue
+ 73.             }
+ 74. 
+.             di "    Joining with temperature data ..."
+ 75.             capture noisily joinby year using "`temp_file'"
+ 76.             if _rc {
+ 77.                 di as error "   ERROR: Failed to join temperature data"
+ 78.                 continue 
+ 79.             }
+ 80.             local temp_file_name "`country_code'-dhs-metrics-`dhs_year'"
+ 81. 
+.             count if cohort == 2005
+ 82. 
+.             capture noisily CohortMetricsCalculator, ///
+>                 country_code("`country_code'") ///
+>                 dhs_year(`dhs_year') ///
+>                 reproductive_span(`reproductive_span') ///
+>                 save_file("`temp_file_name'")
+ 83. 
+.             if _rc == 0 { 
+ 84.                 local temp_files "`temp_files' `temp_file_name'"
+ 85.             }
+ 86.             else {
+ 87.                 di "   WARNING: Failed to calculate metrics for DHS `dhs_y
+> ear' "
+ 88.             }
+ 89.         }
+ 90. 
+.         if "`temp_files'" == "" {
+ 91.             di as error "   ERROR: No temperature metric files were create
+> d for `country_name'"
+ 92.             exit 459
+ 93.         }
+ 94. 
+.         * Step 3: Combine DHS year files 
+.         di "   Combining DHS years ..."
+ 95.         TemperatureAnalysisWorkflow, ///
+>             method("combine_and_select_dhs") ///
+>             country_code("`country_code'") ///
+>             temp_files("`temp_files'") ///
+>             target_age(`target_age')
+ 96. 
+.         if "`cleanup'" == "true" {
+ 97.             di "  Cleaning up temporary files..."
+ 98.             TemperatureAnalysisWorkflow, method("cleanup_temp_files") ///
+>                 country_code("`country_code'") ///
+>                 temp_files("`temp_files'")
+ 99.         }
+100. 
+.         di "=== Analysis complete for `country_name' (`country_code') ==="
+101.     }
+102. 
+.     else if "`method'" == "combine_and_select_dhs" { 
+103.         di "   Combining DHS datasets ..."
+104.         local first_file: word 1 of `temp_files'
+105. 
+.         capture confirm file "$cf/data/derived/dhs/05-dhs-region-cohort-tempe
+> rature/02-dhs-year-metrics/`first_file'.dta"
+106.         if _rc {
+107.             di as error "   ERROR: First DHS metrics file not found: `firs
+> t_file'"
+108.             exit 601
+109.         }
+110. 
+.         use "$cf/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs-yea
+> r-metrics/`first_file'.dta", clear
+111.         qui count 
+112.         local first_obs = r(N)
+113.         di "    Loaded first file: `first_obs' observations"
+114. 
+.         local remaining_files: list temp_files - first_file
+115.         local remaining_count = wordcount("`remaining_files'")
+116. 
+.         if `remaining_count' > 0 {
+117.             di "   Appending `remaining_count' remaining files ..."
+118.             foreach file in `remaining_files' { 
+119.                 capture append using "$cf/data/derived/dhs/05-dhs-region-c
+> ohort-temperature/02-dhs-year-metrics/`file'.dta"
+120.                 if _rc {
+121.                     di as error "   ERROR: Failed to append file: `file'"
+122.                 }
+123.             }
+124.             qui count 
+125.             di "    Combined total: `r(N)' observations"
+126.         }
+127. 
+.         local before_cleaning = r(N)
+128.         drop if missing(cohort) | missing(int_year) | missing(DHS_code)
+129.         qui count 
+130.         local after_cleaning = r(N)
+131.         local dropped = `before_cleaning' - `after_cleaning'
+132.         if `dropped' > 0 {
+133.             di "    Dropped `dropped' observations with missing key variab
+> les"
+134.         }
+135.         di " Clean observations: `after_cleaning' observations"
+136. 
+.         sort DHS_code cohort int_year
+137.         di "   Applying DHS year selection criteria ..."
+138.         CensusSelector, country_code("`country_code'")
+139. 
+.         qui count 
+140.         local final_obs = r(N)
+141. 
+.                 if `final_obs' == 0 {
+142.             di as error "    ERROR: No observations after DHS year selecti
+> on"
+143.             exit 459
+144.         }
+145.         
+.         qui tab int_year
+146.         local n_dhsyear_final = r(r)
+147.         qui levelsof int_year, local(final_dhsyear_list)
+148.         di "      Final dataset: `final_obs' observations across `n_dhsyea
+> r_final' DHS years"
+149.         di "      DHS years: `final_dhsyear_list'"
+150. 
+.         ** Label all of the degree day variables
+.         * Define age bins (must match generate_age_range_exposure)
+.         local bin_starts "15 20 25 30 35 40"
+151.         local bin_ends   "19 24 29 34 39 44"
+152.         local bin_labels "15_19 20_24 25_29 30_34 35_39 40_44"
+153.         local n_bins : word count `bin_starts'
+154. 
+.         local broad_starts "15 30"
+155.         local broad_ends   "29 44"
+156.         local broad_labels "15_29 30_44"
+157.         local n_broad : word count `broad_starts'
+158. 
+.         foreach measure in max mean {
+159.         foreach thres in 24 26 27 28 29 30 32 34 36 38 {
+160.             label variable temp_`measure'_dd_`thres' "Degree days (`measur
+> e' temp) `thres'C, scaled by 100"
+161. 
+.             foreach season in gs ngs {
+162.                 label variable temp_`measure'_dd_`thres'_`season' "Degree 
+> days (`measure' temp) `thres'C (`season'), scaled by 100"
+163.             }
+164. 
+.             * Fine bins
+.             forvalues i = 1/`n_bins' {
+165.                 local s : word `i' of `bin_starts'
+166.                 local e : word `i' of `bin_ends'
+167.                 local lbl : word `i' of `bin_labels'
+168.                 label variable temp_`measure'_dd_`thres'_age_`lbl' "Degree
+>  days (`measure' temp) `thres'C ages `s'-`e', scaled by 100"
+169.                 foreach season in gs ngs {
+170.                     label variable temp_`measure'_dd_`thres'_`season'_age_
+> `lbl' "Degree days (`measure' temp) `thres'C ages `s'-`e', (`season'), scaled
+>  by 100"
+171.                 }
+172.             }
+173. 
+.             * Broad bins
+.             forvalues i = 1/`n_broad' {
+174.                 local s : word `i' of `broad_starts'
+175.                 local e : word `i' of `broad_ends'
+176.                 local lbl : word `i' of `broad_labels'
+177.                 label variable temp_`measure'_dd_`thres'_age_`lbl' "Degree
+>  days (`measure' temp) `thres'C ages `s'-`e', scaled by 100"
+178.                 foreach season in gs ngs {
+179.                     label variable temp_`measure'_dd_`thres'_`season'_age_
+> `lbl' "Degree days (`measure' temp) `thres'C ages `s'-`e', (`season'), scaled
+>  by 100"
+180.                 }
+181.             }
+182.         }
+183.         }
+184. 
+.         label variable temp_mean "Mean temperature, Celsius"
+185.         label variable temp_max "Maximum temperature, Celsius"
+186. 
+.         label variable temp_max_less_18 "Max Temperature bin, less than 18C"
+187.         label variable temp_max_18_21 "Max Temperature bin, 18 - 21C"
+188.         label variable temp_max_21_24 "Max Temperature bin, 21 - 24C"
+189.         label variable temp_max_24_27 "Max Temperature bin, 24 - 27C"
+190.         label variable temp_max_27_30 "Max Temperature bin, 27 - 30C"
+191.         label variable temp_max_30_33 "Max Temperature bin, 30 - 33C"
+192.         label variable temp_max_more_33 "Max Temperature bin, more than 33
+> C"
+193. 
+.         label variable int_year "DHS survey year"
+194.         label variable age_in_dhs_year "Age in DHS survey year"
+195.         label variable cohort_reaches_reproductive "Cohort reaches reprodu
+> ctive age"
+196.         label variable exposure_years "Years of exposure"
+197.         label variable full_exposure "Full exposure"
+198. 
+.         label variable cohort "Cohort"
+199.         label variable DHS_code "DHS code"
+200.         label variable DHSREGEN "DHS region"
+201. 
+.         
+.         local final_file "$cf/data/derived/dhs/05-dhs-region-cohort-temperatu
+> re/`country_name'-dhs-cohort-temperature.dta"
+202.         capture save "`final_file'", replace 
+203.         if _rc != 0 {
+204.             di as error "   ERROR: Cannot save final dataset to `final_fil
+> e'"
+205.             di as error "   Check directory permissions and disk space."
+206.             exit 603 
+207.         }
+208.         di "   Saved final dataset: `country_name'-dhs-cohort-temperature.
+> dta"
+209.     }
+210. 
+.     else if "`method'" == "cleanup_temp_files" {
+211.         local files_deleted = 0 
+212.         di "    Deleting temporary cohort metric files ..."
+213. 
+.         foreach file in `temp_files' {
+214.             local file_path "$cf/data/derived/dhs/05-dhs-region-cohort-tem
+> perature/02-dhs-year-metrics/`file'.dta"
+215.             capture erase "`file_path'"
+216.             if _rc == 0 {
+217.                 local ++files_deleted
+218.             }
+219.         }
+220. 
+.         // di "    Deleting intermediate temperature file ..."
+.         // local temp_file "$cf/data/derived/dhs/05-dhs-region-cohort-tempera
+> ture/01-annual-data/`country_name'-temperature_annual.dta"
+.         // capture erase "`temp_file'"
+.         // if _rc == 0 {
+.         //     local ++files_deleted 
+.         // }
+. 
+.         di "   Cleanup complete: `files_deleted' temporary files removed"
+221.     }
+222. end
+
+. 
+. *****************************************************************************
+> ***
+. * Main Execution
+. *****************************************************************************
+> ***
+. 
+. di ""
+
+
+. di "==============================================="
+===============================================
+
+. di "Multi-Country Temperature Analysis Pipeline"
+Multi-Country Temperature Analysis Pipeline
+
+. di "==============================================="
+===============================================
+
+. 
+. * Initialize configuration first
+. ClimateAnalysisConfig, method("init")
+Initializing configuration for user: prayogbhattarai
+Configuration successful:
+  Base directory: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_C
+> hange_and_Fertility_in_SSA
+
+. 
+. * Test with a small subset first 
+. local test_codes "IVC" 
+
+. local country_codes "`test_codes'"
+
+. 
+. * For full run, use: 
+. //local country_codes "BEN BFA BDI CMR CAF TCD COM COG DRC ETH GAB GMB GHA GI
+> N IVC KEN LSO LBR MDG MWI MLI MOZ NMB NER NGA RWA SEN SLE ZAF SWZ TZA TGO UGA
+>  ZMB ZWE"
+. 
+. local total_countries : word count `country_codes'
+
+. di "Processing `total_countries' countries"
+Processing 1 countries
+
+. di ""
+
+
+. 
+. local country_num = 0 
+
+. local countries_completed ""
+
+. local countries_failed ""
+
+. 
+. foreach country_code in `country_codes' {
+  2.     local ++country_num 
+  3. 
+.     * Get country name for display
+.     GetCountryName, code("`country_code'")
+  4.     local country_name "`r(name)'"
+  5. 
+.     di "=====================================================================
+> ======="
+  6.     di "Country `country_num'/`total_countries': `country_name' (`country_
+> code')"
+  7.     di "==================================================================
+> =========="
+  8.     
+.     capture noisily {
+  9.         TemperatureAnalysisWorkflow, ///
+>             method("run_full_analysis") ///
+>             country_code("`country_code'") ///
+>             target_age(45) ///
+>             cleanup("true")
+ 10.     }
+ 11. 
+.     if _rc == 0 {
+ 12.         local countries_completed "`countries_completed' `country_code'"
+ 13.         di "✓ SUCCESS: `country_name' (`country_code')"
+ 14.     }
+ 15.     else {
+ 16.         local countries_failed "`countries_failed' `country_code'"
+ 17.         di "✗ FAILED: `country_name' (`country_code') - Error code: `_rc'"
+ 18.         
+.         * Provide specific error messages
+.         if _rc == 601 {
+ 19.             di "  > File not found error - check data paths"
+ 20.         }
+ 21.         else if _rc == 459 {
+ 22.             di "  > No observations/data error"
+ 23.         }
+ 24.         else if _rc == 111 {
+ 25.             di "  > Variable not found error"
+ 26.         }
+ 27.         else if _rc == 198 {
+ 28.             di "  > Invalid country code"
+ 29.         }
+ 30.         else {
+ 31.             di "  > Unknown error - check log for details"
+ 32.         }
+ 33.     }
+ 34.     di ""
+ 35. }
+============================================================================
+Country 1/1: Ivory Coast (IVC)
+============================================================================
+
+==== Starting temperature analysis for Ivory Coast (IVC) ====
+Initializing configuration for user: prayogbhattarai
+Configuration successful:
+  Base directory: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_C
+> hange_and_Fertility_in_SSA
+   Checking DHS mapping file: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/00-dhs-country-survey
+> year-mappings/surveycd_reg_year.dta ...
+   Loaded 1070 observations from DHS mapping file
+   Keeping only the records for Cote d'Ivoire ...
+(1,065 observations deleted)
+Filtered to Ivory Coast
+1994 1998 1999 2011 2012
+   Found 5 DHS survey years for Ivory Coast
+    Loading and aggregating temperature data for Ivory Coast (IVC)
+     Looking for data file: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai
+> /Climate_Change_and_Fertility_in_SSA/data/derived/dhs/02-dhs-region-daily-dat
+> a/Ivory Coast-era-dhs-region-day-1940-2023.dta
+    Loaded 30681 observations
+   Keeping variables we need
+(0 observations deleted)
+   Preparing to merge with crop phenology data
+dhsreg_decoded: contains nonnumeric characters; no replace
+    Looking for phenology file: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhatt
+> arai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/03-dhs-fao-growing-
+> season/dhs-crop-phenology-summary-stats.csv
+(36 vars, 207 obs)
+    Loaded 207 observations from phenology data
+   Looking for phenology data for: Ivory Coast
+(206 observations deleted)
+    Found phenology data for Ivory Coast with 1 observations
+file /var/folders/9x/j_ynjyrx41v6y0j2n63nnk8c0000gn/T//St33087.000003 saved
+   Merging ERA and phenology data ...
+(note: variable DHSREGEN was str13, now str30 to accommodate using data's
+       values)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                            30,681  (_merge==3)
+    -----------------------------------------
+ Examining merge success ...
+
+                 _merge |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+            matched (3) |     30,681      100.00      100.00
+------------------------+-----------------------------------
+                  Total |     30,681      100.00
+   Creating growing and non-growing season indicators ...
+(2,604 real changes made)
+(0 real changes made)
+(2,373 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(0 real changes made)
+(2,520 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(2,520 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(2,520 real changes made)
+(0 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(2,520 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+  0
+    Calculating degree days ...
+  Calculating degree days for thresholds 24(2)38
+  Degree days calculation completed
+  Calculating degree days for thresholds 26(1)30
+  Degree days calculation completed
+    Creating growing/non-growing season variants ...
+      Collapsing to annual level ...
+temp_ma~d_24  temp_max_~38  t~x_dd_28_gs  t~n_dd_34_gs  temp_ma~9_gs
+temp_mean~24  temp_mean~38  ~x_dd_28_ngs  ~n_dd_34_ngs  ~x_dd_29_ngs
+temp_max_~26  temp_max_d~7  t~n_dd_28_gs  t~x_dd_36_gs  temp_me~9_gs
+temp_mean~26  temp_mean~27  ~n_dd_28_ngs  ~x_dd_36_ngs  ~n_dd_29_ngs
+temp_max_~28  temp_max_~29  temp_ma~0_gs  t~n_dd_36_gs  temp_max_~18
+temp_mean~28  temp_mean~29  ~x_dd_30_ngs  ~n_dd_36_ngs  temp_max_~21
+temp_max_d~0  t~x_dd_24_gs  temp_me~0_gs  t~x_dd_38_gs  temp_max_2~4
+temp_mean~30  ~x_dd_24_ngs  ~n_dd_30_ngs  ~x_dd_38_ngs  temp_max_2~7
+temp_max_~32  t~n_dd_24_gs  temp_ma~2_gs  t~n_dd_38_gs  temp_max_2~0
+temp_mean~32  ~n_dd_24_ngs  ~x_dd_32_ngs  ~n_dd_38_ngs  temp_max_3~3
+temp_max_~34  t~x_dd_26_gs  temp_me~2_gs  temp_ma~7_gs  temp_max_m~3
+temp_mean~34  ~x_dd_26_ngs  ~n_dd_32_ngs  ~x_dd_27_ngs
+temp_max_~36  t~n_dd_26_gs  t~x_dd_34_gs  temp_me~7_gs
+temp_mean~36  ~n_dd_26_ngs  ~x_dd_34_ngs  ~n_dd_27_ngs
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+days_per_y~r |         84      365.25    .4356134        365        366
+
+days_per_ye |
+         ar |      Freq.     Percent        Cum.
+------------+-----------------------------------
+        365 |         63       75.00       75.00
+        366 |         21       25.00      100.00
+------------+-----------------------------------
+      Total |         84      100.00
+  0
+   Annual data has 84 observations
+    Saving to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Chan
+> ge_and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/01-
+> annual-data/Ivory Coast-temperature_annual.dta ...
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/01-annual-dat
+> a/Ivory Coast-temperature_annual.dta saved
+Annual temperature data saved successfully.
+   Processing cohort metrics by DHS year ...
+   DHS year 1/5: 1994 ...
+(870 observations deleted)
+(0 observations deleted)
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |      1,185    1946.198     12.9088       1926       1979
+      Cohort-year combinations: 1185
+    Joining with temperature data ...
+  0
+     Calculating cohort metrics for DHS year: 1994 with reproductive span 30 ye
+> ars
+    Starting with 1185 observations
+    Generating age variables
+  Generating age-specific temperature exposure variables
+  Age-specific exposure variables created
+    Collapsing to cohort level ...
+Summary of total days
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  total_days |         51    8443.647    3178.053       1461      10958
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+years_cove~e |         54    21.94423    9.762243   .9993156   30.00137
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |         42      1956.5    15.24635       1926       1979
+
+     +------------------------------+
+     | cohort   total_~s   years_~e |
+     |------------------------------|
+  1. |   1926      10957   29.99863 |
+     +------------------------------+
+    Saving cohort metrics to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-
+> temperature/02-dhs-year-metrics/IVC-dhs-metrics-1994.dta ...
+(note: file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs
+> -year-metrics/IVC-dhs-metrics-1994.dta not found)
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs-year-m
+> etrics/IVC-dhs-metrics-1994.dta saved
+Cohort metrics saved successfully with 54 observations.
+   DHS year 2/5: 1998 ...
+(750 observations deleted)
+(0 observations deleted)
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |      1,305    1948.111    13.94525       1926       1983
+      Cohort-year combinations: 1305
+    Joining with temperature data ...
+  0
+     Calculating cohort metrics for DHS year: 1998 with reproductive span 30 ye
+> ars
+    Starting with 1305 observations
+    Generating age variables
+  Generating age-specific temperature exposure variables
+  Age-specific exposure variables created
+    Collapsing to cohort level ...
+Summary of total days
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  total_days |         51     9145.51    2603.294       2922      10958
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+years_cove~e |         58     22.4998    9.636055   .9993156   30.00137
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |         44    1958.955    16.52194       1926       1983
+
+     +------------------------------+
+     | cohort   total_~s   years_~e |
+     |------------------------------|
+  1. |   1926      10957   29.99863 |
+     +------------------------------+
+    Saving cohort metrics to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-
+> temperature/02-dhs-year-metrics/IVC-dhs-metrics-1998.dta ...
+(note: file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs
+> -year-metrics/IVC-dhs-metrics-1998.dta not found)
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs-year-m
+> etrics/IVC-dhs-metrics-1998.dta saved
+Cohort metrics saved successfully with 58 observations.
+   DHS year 3/5: 1999 ...
+(720 observations deleted)
+(0 observations deleted)
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |      1,335    1948.592    14.20699       1926       1984
+      Cohort-year combinations: 1335
+    Joining with temperature data ...
+  0
+     Calculating cohort metrics for DHS year: 1999 with reproductive span 30 ye
+> ars
+    Starting with 1335 observations
+    Generating age variables
+  Generating age-specific temperature exposure variables
+  Age-specific exposure variables created
+    Collapsing to cohort level ...
+Summary of total days
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  total_days |         51    9302.961    2458.309       3287      10958
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+years_cove~e |         59    22.62657    9.602644   .9993156   30.00137
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |         45    1959.511    16.75441       1926       1984
+
+     +------------------------------+
+     | cohort   total_~s   years_~e |
+     |------------------------------|
+  1. |   1926      10957   29.99863 |
+     +------------------------------+
+    Saving cohort metrics to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-
+> temperature/02-dhs-year-metrics/IVC-dhs-metrics-1999.dta ...
+(note: file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs
+> -year-metrics/IVC-dhs-metrics-1999.dta not found)
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs-year-m
+> etrics/IVC-dhs-metrics-1999.dta saved
+Cohort metrics saved successfully with 59 observations.
+   DHS year 4/5: 2011 ...
+(360 observations deleted)
+(0 observations deleted)
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |      1,695    1954.413    17.41078       1926       1996
+      Cohort-year combinations: 1695
+    Joining with temperature data ...
+  0
+     Calculating cohort metrics for DHS year: 2011 with reproductive span 30 ye
+> ars
+    Starting with 1695 observations
+    Generating age variables
+  Generating age-specific temperature exposure variables
+  Age-specific exposure variables created
+    Collapsing to cohort level ...
+Summary of total days
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  total_days |         51    10635.14    809.1225       7670      10958
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+years_cove~e |         71    23.87279    9.173227   .9993156   30.00137
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |         51    1966.686    20.64993       1926       1996
+
+     +------------------------------+
+     | cohort   total_~s   years_~e |
+     |------------------------------|
+  1. |   1926      10957   29.99863 |
+     +------------------------------+
+    Saving cohort metrics to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-
+> temperature/02-dhs-year-metrics/IVC-dhs-metrics-2011.dta ...
+(note: file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs
+> -year-metrics/IVC-dhs-metrics-2011.dta not found)
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs-year-m
+> etrics/IVC-dhs-metrics-2011.dta saved
+Cohort metrics saved successfully with 71 observations.
+   DHS year 5/5: 2012 ...
+(330 observations deleted)
+(0 observations deleted)
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |      1,725    1954.901    17.68199       1926       1997
+      Cohort-year combinations: 1725
+    Joining with temperature data ...
+  0
+     Calculating cohort metrics for DHS year: 2012 with reproductive span 30 ye
+> ars
+    Starting with 1725 observations
+    Generating age variables
+  Generating age-specific temperature exposure variables
+  Age-specific exposure variables created
+    Collapsing to cohort level ...
+Summary of total days
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  total_days |         51    10699.73    690.1714       8036      10958
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+years_cove~e |         72    23.95874    9.136128   1.002053   30.00137
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      cohort |         51    1967.255     21.0816       1926       1997
+
+     +------------------------------+
+     | cohort   total_~s   years_~e |
+     |------------------------------|
+  1. |   1926      10957   29.99863 |
+     +------------------------------+
+    Saving cohort metrics to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-
+> temperature/02-dhs-year-metrics/IVC-dhs-metrics-2012.dta ...
+(note: file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs
+> -year-metrics/IVC-dhs-metrics-2012.dta not found)
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/05-dhs-region-cohort-temperature/02-dhs-year-m
+> etrics/IVC-dhs-metrics-2012.dta saved
+Cohort metrics saved successfully with 72 observations.
+   Combining DHS years ...
+   Combining DHS datasets ...
+    Loaded first file: 54 observations
+   Appending 4 remaining files ...
+    Combined total: 314 observations
+(0 observations deleted)
+ Clean observations: 314 observations
+   Applying DHS year selection criteria ...
+(0 real changes made)
+      Final dataset: 314 observations across 5 DHS years
+      DHS years: 1994 1998 1999 2011 2012
+   Saved final dataset: Ivory Coast-dhs-cohort-temperature.dta
+  Cleaning up temporary files...
+    Deleting temporary cohort metric files ...
+   Cleanup complete: 5 temporary files removed
+=== Analysis complete for Ivory Coast (IVC) ===
+✓ SUCCESS: Ivory Coast (IVC)
+
+
+. 
+. local completed_count : word count `countries_completed'
+
+. local failed_count: word count `countries_failed'
+
+. 
+. di "==============================================="
+===============================================
+
+. di "Pipeline Complete"
+Pipeline Complete
+
+. di "==============================================="
+===============================================
+
+. di "Successful: `completed_count'/`total_countries'"
+Successful: 1/1
+
+. di "Failed: `failed_count'/`total_countries'"
+Failed: 0/1
+
+. 
+. if `completed_count' > 0 {
+.     di ""
+
+.     di "Successfully completed countries:"
+Successfully completed countries:
+.     foreach country_code in `countries_completed' {
+  2.         GetCountryName, code("`country_code'")
+  3.         di "  ✓ `r(name)' (`country_code')"
+  4.     }
+  ✓ Ivory Coast (IVC)
+. }
+
+. 
+. if `failed_count' > 0 {
+.     di ""
+.     di "Failed countries:"
+.     foreach country_code in `countries_failed' {
+  2.         GetCountryName, code("`country_code'")
+  3.         di "  ✗ `r(name)' (`country_code')"
+  4.     }
+.     
+.     di ""
+.     di "Troubleshooting tips:"
+.     di "1. Check that all required data files exist:"
+.     di "   - ERA data: $cf/data/derived/dhs/02-dhs-region-daily-data/[country
+> ]-era-dhs-region-day-1940-2023.dta"
+.     di "   - Phenology: $cf/data/derived/dhs/03-dhs-fao-growing-season/dhs-cr
+> op-phenology-summary-stats.csv"
+.     di "   - Cohort: $cf/data/derived/dhs/00-dhs-country-surveyyear-mappings/
+> dhs-cohort-year.dta"
+.     di "2. Verify country names match exactly in phenology and DHS files"
+.     di "3. Check that directories exist and have write permissions"
+.     di "4. Run with a single country first to identify specific issues"
+. }
+
+. 
+end of do-file

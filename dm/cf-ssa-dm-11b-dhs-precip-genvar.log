@@ -1,0 +1,2938 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   16.1   Copyright 1985-2019 StataCorp LLC
+  Statistics/Data analysis            StataCorp
+                                      4905 Lakeway Drive
+     Special Edition                  College Station, Texas 77845 USA
+                                      800-STATA-PC        https://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Stata license: Single-user  perpetual
+Serial number: 401606328044
+  Licensed to: Eigen Platz
+               NUS
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. Maximum number of variables is set to 5,000; see help set_maxvar.
+
+. do cf-ssa-dm-11b-dhs-precip-genvar.do 
+
+. *****************************************************************************
+> ***
+. * PROJECT:              Climate Change and Fertility in Sub-Saharan Africa
+. * AUTHOR:               Prayog Bhattarai
+. * DATE MODIFIED:        2025-10-14
+. * DESCRIPTION:          DHS: Generate temperature variables using country cod
+> e mapping
+. * DEPENDENCIES:         
+. * 
+. * NOTES: We use the subunit-day data created in previous steps to generate 
+. *        subunit-cohort-dhsyear level temperature data
+. *        Output data is in data/derived/dhs/04-dhs-region-cohort-temperature/
+> `country_name'-dhs-cohort-temperature.dta
+. *****************************************************************************
+> ***
+. 
+. *****************************************************************************
+> ***
+. * Setup and Configuration
+. *****************************************************************************
+> ***
+. 
+.     local username = c(username)
+
+. 
+.     if "`username'" == "prayogbhattarai" {
+.         global cf "/Users/`username'/NUS Dropbox/Prayog Bhattarai/Climate_Cha
+> nge_and_Fertility_in_SSA"
+.         global cf_overleaf "/Users/`username'/NUS Dropbox/Prayog Bhattarai/Ap
+> ps/Overleaf/climate-fertility-ssa/output"
+.     }
+
+.     else if "`username'" == "prayog" {
+.         global cf "D:/`username'/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA"
+.         global cf_overleaf "D:/`username'/NUS Dropbox/Prayog Bhattarai/Apps/O
+> verleaf/climate-fertility-ssa/output"
+.     }
+
+.     else if "`username'" == "yogita" {
+.         global cf "/Users/`username'/NUS Dropbox/`username'/Climate_Change_an
+> d_Fertility_in_SSA"
+.         global cf_overleaf "/Users/`username'/NUS Dropbox/`username'/Apps/Ove
+> rleaf/climate-fertility-ssa/output"
+.     }
+
+.     else if inlist("`username'", "celin", "CE.4875") {
+.         global cf "/Users/`username'/Dropbox/Climate_Change_and_Fertility_in_
+> SSA"
+.         global cf_overleaf "/Users/`username'/Apps/Overleaf/climate-fertility
+> -ssa/output"
+.     }
+
+.     else if "`username'" == "yun" {
+.         global cf "/Users/`username'/Dropbox/Climate_Change_and_Fertility_in_
+> SSA"
+.         global cf_overleaf "/Users/`username'/Apps/Overleaf/climate-fertility
+> -ssa/output"
+.     }
+
+. 
+. *****************************************************************************
+> ***
+. * Country Code to Name Mapping
+. *****************************************************************************
+> ***
+. 
+.     capture program drop GetCountryName
+
+.     program define GetCountryName, rclass
+  1.         syntax, code(string)
+  2.         
+.         * Define the mapping
+.         if "`code'" == "BEN" {
+  3.             local country_name "Benin"
+  4.         }
+  5.         else if "`code'" == "BFA" {
+  6.             local country_name "Burkina Faso"
+  7.         }
+  8.         else if "`code'" == "BDI" {
+  9.             local country_name "Burundi"
+ 10.         }
+ 11.         else if "`code'" == "CMR" {
+ 12.             local country_name "Cameroon"
+ 13.         }
+ 14.         else if "`code'" == "CAF" {
+ 15.             local country_name "Central African Republic"
+ 16.         }
+ 17.         else if "`code'" == "TCD" {
+ 18.             local country_name "Chad"
+ 19.         }
+ 20.         else if "`code'" == "COM" {
+ 21.             local country_name "Comoros"
+ 22.         }
+ 23.         else if "`code'" == "COG" {
+ 24.             local country_name "Congo"
+ 25.         }
+ 26.         else if "`code'" == "DRC" {
+ 27.             local country_name "Congo Democratic Republic"
+ 28.         }
+ 29.         else if "`code'" == "ETH" {
+ 30.             local country_name "Ethiopia"
+ 31.         }
+ 32.         else if "`code'" == "GAB" {
+ 33.             local country_name "Gabon"
+ 34.         }
+ 35.         else if "`code'" == "GMB" {
+ 36.             local country_name "The Gambia"
+ 37.         }
+ 38.         else if "`code'" == "GHA" {
+ 39.             local country_name "Ghana"
+ 40.         }
+ 41.         else if "`code'" == "GIN" {
+ 42.             local country_name "Guinea"
+ 43.         }
+ 44.         else if "`code'" == "IVC" {
+ 45.             local country_name "Ivory Coast"
+ 46.         }
+ 47.         else if "`code'" == "KEN" {
+ 48.             local country_name "Kenya"
+ 49.         }
+ 50.         else if "`code'" == "LSO" {
+ 51.             local country_name "Lesotho"
+ 52.         }
+ 53.         else if "`code'" == "LBR" {
+ 54.             local country_name "Liberia"
+ 55.         }
+ 56.         else if "`code'" == "MDG" {
+ 57.             local country_name "Madagascar"
+ 58.         }
+ 59.         else if "`code'" == "MWI" {
+ 60.             local country_name "Malawi"
+ 61.         }
+ 62.         else if "`code'" == "MLI" {
+ 63.             local country_name "Mali"
+ 64.         }
+ 65.         else if "`code'" == "MOZ" {
+ 66.             local country_name "Mozambique"
+ 67.         }
+ 68.         else if "`code'" == "NMB" {
+ 69.             local country_name "Namibia"
+ 70.         }
+ 71.         else if "`code'" == "NER" {
+ 72.             local country_name "Niger"
+ 73.         }
+ 74.         else if "`code'" == "NGA" {
+ 75.             local country_name "Nigeria"
+ 76.         }
+ 77.         else if "`code'" == "RWA" {
+ 78.             local country_name "Rwanda"
+ 79.         }
+ 80.         else if "`code'" == "SEN" {
+ 81.             local country_name "Senegal"
+ 82.         }
+ 83.         else if "`code'" == "SLE" {
+ 84.             local country_name "Sierra Leone"
+ 85.         }
+ 86.         else if "`code'" == "ZAF" {
+ 87.             local country_name "South Africa"
+ 88.         }
+ 89.         else if "`code'" == "SWZ" {
+ 90.             local country_name "Swaziland"
+ 91.         }
+ 92.         else if "`code'" == "TZA" {
+ 93.             local country_name "Tanzania"
+ 94.         }
+ 95.         else if "`code'" == "TGO" {
+ 96.             local country_name "Togo"
+ 97.         }
+ 98.         else if "`code'" == "UGA" {
+ 99.             local country_name "Uganda"
+100.         }
+101.         else if "`code'" == "ZMB" {
+102.             local country_name "Zambia"
+103.         }
+104.         else if "`code'" == "ZWE" {
+105.             local country_name "Zimbabwe"
+106.         }
+107.         else {
+108.             local country_name ""
+109.         }
+110.         
+.         return local name "`country_name'"
+111.     end
+
+. 
+. *****************************************************************************
+> ***
+. * Data Processing Functions
+. *****************************************************************************
+> ***
+. 
+.     capture program drop load_and_process_era 
+
+.     program define load_and_process_era 
+  1.         syntax, country_code(string)
+  2.         /*
+>         Program: load_and_process_era
+>         Description: Loads and validates ERA precipitation data for a specifi
+> c country
+>         Parameters: 
+>             country_code: Three-letter country code (e.g. "BEN", "BWA")
+>         Output:
+>             Loads ERA daily precipitation data for the specified country into
+>  memory
+>         */
+. 
+.         * Get country name from code
+.         GetCountryName, code("`country_code'")
+  3.         local country_name "`r(name)'"
+  4.         
+.         di "  Loading ERA data for `country_name' (`country_code')..."
+  5.         * Check if the country ERA data file exists
+.         local data_file "$cf/data/derived/dhs/02-dhs-region-daily-data/`count
+> ry_name'-era-dhs-region-day-1940-2023.dta"
+  6.         di "     Looking for data file: `data_file'"
+  7. 
+.         capture confirm file "`data_file'"
+  8.         if _rc {
+  9.             di as error "    ERROR: Data file for `country_name' not found
+> ."
+ 10.             exit 601
+ 11.         }
+ 12. 
+.         use "`data_file'", clear
+ 13.         qui count
+ 14.         di "    Loaded `r(N)' observations"
+ 15.         
+.         if r(N) == 0 {
+ 16.             di as error "    ERROR: ERA data file is empty"
+ 17.             exit 459
+ 18.         }
+ 19.         
+.         * Check required variables
+.         local required_vars "DHSREGEN DHS_code precip day month year"
+ 20.         foreach var of local required_vars {
+ 21.             capture confirm variable `var'
+ 22.             if _rc {
+ 23.                 di as error "    ERROR: Required variable `var' not found 
+> in data"
+ 24.                 exit 111
+ 25.             }
+ 26.         }
+ 27. 
+.         di "   Keeping variables we need"
+ 28.         keep DHSREGEN DHS_code precip day month year
+ 29.         drop if missing(precip)
+ 30. 
+.         di "   Preparing to merge with crop phenology data"
+ 31.         decode DHSREGEN, gen(dhsreg_decoded)
+ 32.         destring dhsreg_decoded, replace
+ 33.         drop DHSREGEN
+ 34.         rename dhsreg_decoded DHSREGEN
+ 35.         di "ERA data loaded successfully. Proceeding to merge crop phenolo
+> gy data"
+ 36. 
+.         preserve
+ 37.             local phenology_file "$cf/data/derived/dhs/03-dhs-fao-growing-
+> season/dhs-crop-phenology-summary-stats.csv"
+ 38.             di "    Looking for phenology file: `phenology_file'"
+ 39.             
+.             capture confirm file "`phenology_file'"
+ 40.             if _rc {
+ 41.                 di as error "    ERROR: Phenology file not found: `phenolo
+> gy_file'"
+ 42.                 exit 601
+ 43.             }
+ 44. 
+.             import delimited using "`phenology_file'", clear
+ 45.             qui count
+ 46.             di "    Loaded `r(N)' observations from phenology data"
+ 47. 
+.             di "   Looking for phenology data for: `country_name'"
+ 48.             ren (cntrynamee dhsregen dhs_code) (COUNTRY DHSREGEN DHS_code)
+ 49.             
+.             keep if COUNTRY == "`country_name'"
+ 50.             ren gs1_has_data gs1_valid
+ 51.             ren gs2_has_data gs2_valid
+ 52.             gen no_valid_pixels = (gs1_valid == 0 & gs2_valid == 0)
+ 53.             label var no_valid_pixels "Indicator for no valid phenology pi
+> xels"
+ 54.             
+. 
+.             qui count
+ 55.             if r(N) == 0 {
+ 56.                 di as error "    ERROR: No phenology data found for `count
+> ry_name'"
+ 57.                 di          "    Creating empty phenology dataset"
+ 58.                 clear 
+ 59.                 gen DHS_code = .
+ 60.                 forvalues m = 1/12 {
+ 61.                     gen growing_month_`m' = 0
+ 62.                 }
+ 63.             }
+ 64.             else {
+ 65.                 di as text "    Found phenology data for `country_name' wi
+> th `r(N)' observations"
+ 66.                 keep DHSREGEN DHS_code no_valid_pixels growing_month_*
+ 67.             }
+ 68. 
+.             tempfile crop_phenology
+ 69.             save "`crop_phenology'"
+ 70.         restore
+ 71. 
+.         di "   Merging ERA and phenology data ..."
+ 72.         merge m:1 DHS_code using `crop_phenology'
+ 73.         di " Examining merge success ..."
+ 74.         tab _merge
+ 75. 
+.         * Explicit merge quality summary (easy to grep in log)
+.         qui count if _merge == 1
+ 76.         local n_era_only = r(N)
+ 77.         qui count if _merge == 2
+ 78.         local n_pheno_only = r(N)
+ 79.         qui count if _merge == 3
+ 80.         local n_matched = r(N)
+ 81.         if `n_era_only' == 0 & `n_pheno_only' == 0 {
+ 82.             di "  ✓ MERGE PERFECT: all `n_matched' obs matched (no ERA-onl
+> y or phenology-only rows)"
+ 83.         }
+ 84.         else {
+ 85.             if `n_era_only' > 0  di "  ✗ MERGE NOTE: `n_era_only' ERA obs 
+> have NO phenology match — growing months will default to non-growing season"
+ 86.             if `n_pheno_only' > 0 di "  ✗ MERGE NOTE: `n_pheno_only' pheno
+> logy rows have NO ERA match (dropped)"
+ 87.         }
+ 88. 
+.         * ----------------------------------------------------------------
+.         * FIX: For ERA5 DHS_codes with no phenology match (_merge == 1),
+.         * growing_month_m is missing (.) rather than 0.  In Stata,
+.         * (. == 0) evaluates to FALSE, so those observations would get
+.         * gs = 0 AND ngs = 0, making precip_gs = precip_ngs = 0 while
+.         * precip retains its full value — breaking the decomposition
+.         * identity precip = precip_gs + precip_ngs.
+.         * Treat unmatched regions as entirely non-growing season (ngs = 1)
+.         * so the identity holds.  The no_valid_pixels flag documents them.
+.         * ----------------------------------------------------------------
+.         forvalues m = 1/12 {
+ 89.             capture confirm variable growing_month_`m'
+ 90.             if !_rc {
+ 91.                 qui count if missing(growing_month_`m')
+ 92.                 if r(N) > 0 {
+ 93.                     di "    NOTE: `r(N)' obs have missing growing_month_`m
+> ' (no phenology match) — set to 0 (non-growing season)"
+ 94.                     replace growing_month_`m' = 0 if missing(growing_month
+> _`m')
+ 95.                 }
+ 96.             }
+ 97.         }
+ 98.         drop _merge
+ 99. 
+.         di "   Creating growing and non-growing season indicators ..."
+100.         gen byte gs = 0
+101.         gen byte ngs = 0
+102.         forvalues m = 1/12 {
+103.             capture confirm variable growing_month_`m'
+104.             if !_rc {
+105.                 replace gs = 1 if growing_month_`m' == 1 & month == `m'
+106.                 replace ngs = 1 if growing_month_`m' == 0 & month == `m'
+107.             }
+108.         }
+109. 
+.         * Create seasonal precipitation variables
+.         gen precip_gs = precip * gs
+110.         gen precip_ngs = precip * ngs
+111. 
+.         * ASSERTION: precip = precip_gs + precip_ngs for every daily observat
+> ion.
+.         * By construction gs + ngs = 1 for all rows (growing_month_m is binar
+> y
+.         * and missing values were zeroed out above), so this should always pa
+> ss.
+.         * A failure here means some observations have gs = ngs = 0, i.e. a mo
+> nth
+.         * was not covered by the growing_month loop — signalling a merge or d
+> ata
+.         * problem that would silently corrupt the seasonal decomposition.
+.         tempvar _check_decomp
+112.         gen double `_check_decomp' = precip_gs + precip_ngs
+113.         qui count if abs(`_check_decomp' - precip) > 1e-6 & !missing(preci
+> p)
+114.         if r(N) > 0 {
+115.             di as error "    ASSERTION FAILED: precip ≠ precip_gs + precip
+> _ngs for `r(N)' observations"
+116.             di as error "    This means gs + ngs ≠ 1 for some rows — check
+>  the growing_month merge"
+117.             exit 459
+118.         }
+119.         di "    ✓ Decomposition identity holds: precip = precip_gs + preci
+> p_ngs (all `c(N)' obs)"
+120.         drop `_check_decomp'
+121. 
+.         * Label variables
+.         la var precip_gs "Growing season precipitation"
+122.         la var precip_ngs "Non-growing season precipitation"
+123. 
+.         * Validate seasonal variables
+.         qui sum precip_gs
+124.         di "    Growing season precip - Mean: `r(mean)', SD: `r(sd)'"
+125.         qui sum precip_ngs
+126.         di "    Non-growing season precip - Mean: `r(mean)', SD: `r(sd)'"
+127.         
+.         di "  Seasonal variables created successfully"
+128. 
+.         * Ensure DHS_code is numeric 
+.         capture confirm string variable DHS_code
+129.         if !_rc {
+130.             destring DHS_code, replace force
+131.         }
+132. 
+.         di "Aggregating data to annual level ..."
+133.         collapse (sum) precip precip_gs precip_ngs (first) no_valid_pixels
+> , by(DHS_code DHSREGEN year)
+134.         recast float year 
+135.                 * Validate annual data
+.         qui count
+136.         di "    Annual data has `r(N)' observations"
+137.         
+.         qui count if missing(precip)
+138.         if r(N) > 0 {
+139.             di "    WARNING: Annual data has `r(N)' missing values for pre
+> cip"
+140.         }
+141.         
+.         qui count if missing(precip_gs)
+142.         if r(N) > 0 {
+143.             di "    WARNING: Annual data has `r(N)' missing values for pre
+> cip_gs"
+144.         }
+145.         
+.         qui count if missing(precip_ngs)
+146.         if r(N) > 0 {
+147.             di "    WARNING: Annual data has `r(N)' missing values for pre
+> cip_ngs"
+148.         }
+149. 
+.         * Create directory if it doesn't exist
+.         capture mkdir "$cf/data/derived/dhs/04-dhs-region-cohort-precipitatio
+> n/01-annual-data"
+150.         
+.         * Save annual data
+.         local save_file "$cf/data/derived/dhs/04-dhs-region-cohort-precipitat
+> ion/01-annual-data/`country_name'_precip_annual.dta"
+151.         di "    Saving annual data to: `save_file'"
+152.         save "`save_file'", replace
+153.         
+.         di "  Annual aggregation completed successfully"
+154.     end
+
+. 
+. 
+.     capture program drop create_gammafit_dataset
+
+.     program define create_gammafit_dataset
+  1.         syntax, country_code(string)
+  2.         /*
+>             Program: create_gammafit_dataset
+>             Description: Creates dataset with gamma distribution fits for pre
+> cipitation variables
+>             Parameters:
+>                 country_code: Three-letter country code
+>             Output:
+>                 Saves dataset with gamma distribution parameters and SPI valu
+> es
+>         */
+.         di as text "   Creating gamma fit dataset with scaling ..."
+  3. 
+.         * Get country name
+.         GetCountryName, code("`country_code'")
+  4.         local country_name "`r(name)'"
+  5.         
+.         local annual_file "$cf/data/derived/dhs/04-dhs-region-cohort-precipit
+> ation/01-annual-data/`country_name'_precip_annual.dta"
+  6.         capture confirm file "`annual_file'"
+  7.         if _rc {
+  8.             di as error "    ERROR: Annual precipitation file not found: `
+> annual_file'"
+  9.             exit 601
+ 10.         }
+ 11. 
+.         use "`annual_file'", clear
+ 12.             
+.         qui count
+ 13.         di "    Loaded `r(N)' annual observations for gamma fitting"
+ 14.         
+.         sort DHS_code year
+ 15.         
+.         * Fit gamma distributions 
+.         GammaDistributionFitter, variables("precip precip_gs precip_ngs")
+ 16. 
+.         * Keep only essential variables for gamma fit results 
+.         keep DHSREGEN DHS_code year no_valid_pixels abn_precip* precip*_spi a
+> lpha beta P spi i_gammafit_scaled
+ 17. 
+.         * Save gamma fit results 
+.         local save_file "$cf/data/derived/dhs/04-dhs-region-cohort-precipitat
+> ion/02-gammafit-data/`country_code'_gammafit.dta"
+ 18.         di "   Saving gamma fit results to : `save_file'"
+ 19.         save "`save_file'", replace
+ 20.         di " Gamma fit dataset created successfully"
+ 21.     end
+
+. 
+.     ** Cohort Metrics Calculator
+.     capture program drop cohort_metrics_calculator
+
+.     program define cohort_metrics_calculator
+  1.         syntax, country_code(string) [reproductive_span(real 30) dhs_year(
+> real 2020) save_file(string)]
+  2.         /*
+>         Program: cohort_metrics_calculator
+>         Description: Calculates cohort-level precipitation metrics including 
+> scaling indicators
+>         Parameters:
+>             country_code: Three-letter country code
+>             reproductive_span: Number of years representing reproductive span
+>             dhs_year: Census year to consider
+>             save_file: File path to save cohort-level precipitation data
+>         */
+.         
+.         di "    Calculating cohort metrics for dhs `dhs_year'"
+  3.         
+.         * Get country name from code
+.         GetCountryName, code("`country_code'")
+  4.         local country_name "`r(name)'"
+  5.         
+.         * Check current dataset
+.         qui count
+  6.         di "      Starting with `r(N)' observations"
+  7.         di "      Generating age variables ..."
+  8.         * ── Fine bins: six 5-year bins (configurable) ──
+.         local bin_starts "15 20 25 30 35 40"
+  9.         local bin_ends   "19 24 29 34 39 44"
+ 10.         local bin_labels "15_19 20_24 25_29 30_34 35_39 40_44"
+ 11.         local n_bins : word count `bin_starts'
+ 12. 
+.         * ── Broad bins: two halves of the reproductive span ──
+.         local broad_starts "15 30"
+ 13.         local broad_ends   "29 44"
+ 14.         local broad_labels "15_29 30_44"
+ 15.         local n_broad : word count `broad_starts'
+ 16. 
+.         * Create fine-bin indicators
+.         forvalues i = 1/`n_bins' {
+ 17.             local s : word `i' of `bin_starts'
+ 18.             local e : word `i' of `bin_ends'
+ 19.             local lbl : word `i' of `bin_labels'
+ 20.             qui gen age_`lbl' = inrange(age, `s', `e')
+ 21.         }
+ 22.         * Create broad-bin indicators
+.         forvalues i = 1/`n_broad' {
+ 23.             local s : word `i' of `broad_starts'
+ 24.             local e : word `i' of `broad_ends'
+ 25.             local lbl : word `i' of `broad_labels'
+ 26.             qui gen age_`lbl' = inrange(age, `s', `e')
+ 27.         }
+ 28. 
+.         local gammafit_file "$cf/data/derived/dhs/04-dhs-region-cohort-precip
+> itation/02-gammafit-data/`country_code'_gammafit.dta"
+ 29. 
+.         capture confirm file "`gammafit_file'"
+ 30.         if _rc {
+ 31.             di "      WARNING: Gamma fit file not found: `gammafit_file'"
+ 32.             di "      Proceeding without SPI variables"
+ 33.         }
+ 34.         else {
+ 35.             di "      Merging with gamma fit results (including scaling in
+> dicators)"
+ 36.             qui merge m:1 DHS_code year using "`gammafit_file'"
+ 37.             drop _merge
+ 38. 
+.             * Report on scaling usage
+.             qui sum i_gammafit_scaled
+ 39.             if r(N) > 0 & r(mean) > 0 {
+ 40.                 di "      Scaling was used for `=round(r(mean)*100, 0.1)'%
+>  of observations"
+ 41.             }
+ 42.         }
+ 43. 
+.         * Base variables including the new scaling indicator
+.         local base_vars "precip abn_precip_dry abn_precip_wet abn_precip prec
+> ip_spi precip_gs_spi precip_ngs_spi precip_gs precip_ngs abn_precip_gs abn_pr
+> ecip_ngs abn_precip_gs_dry abn_precip_ngs_dry abn_precip_gs_wet abn_precip_ng
+> s_wet i_gammafit_scaled"
+ 44. 
+.         local vars_created = 0
+ 45.         foreach var of local base_vars {
+ 46.             capture confirm variable `var'
+ 47.             if _rc == 0 {
+ 48.                 * Don't create age-specific versions for the scaling indic
+> ator
+.                 if "`var'" != "i_gammafit_scaled" {
+ 49.                     forvalues i = 1/`n_bins' {
+ 50.                         local lbl : word `i' of `bin_labels'
+ 51.                         qui gen `var'_`lbl' = `var' * age_`lbl'
+ 52.                     }
+ 53.                     forvalues i = 1/`n_broad' {
+ 54.                         local lbl : word `i' of `broad_labels'
+ 55.                         qui gen `var'_`lbl' = `var' * age_`lbl'
+ 56.                     }
+ 57.                 }
+ 58.                 local ++vars_created
+ 59.             }
+ 60.         }
+ 61. 
+.         di "      Collapsing to cohort level..."
+ 62. 
+.         * Build age-bin-specific collapse specs dynamically
+.         local coll_sum_bins ""
+ 63.         local coll_mean_bins ""
+ 64.         * Fine bins
+.         forvalues i = 1/`n_bins' {
+ 65.             local lbl : word `i' of `bin_labels'
+ 66.             local coll_sum_bins "`coll_sum_bins' precip_total_`lbl' = prec
+> ip_`lbl' precip_gs_total_`lbl' = precip_gs_`lbl' precip_ngs_total_`lbl' = pre
+> cip_ngs_`lbl'"
+ 67.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_`lbl' = ab
+> n_precip_`lbl' tot_abn_precip_dry_`lbl' = abn_precip_dry_`lbl' tot_abn_precip
+> _wet_`lbl' = abn_precip_wet_`lbl'"
+ 68.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_gs_`lbl' =
+>  abn_precip_gs_`lbl' tot_abn_precip_ngs_`lbl' = abn_precip_ngs_`lbl'"
+ 69.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_gs_dry_`lb
+> l' = abn_precip_gs_dry_`lbl' tot_abn_precip_gs_wet_`lbl' = abn_precip_gs_wet_
+> `lbl'"
+ 70.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_ngs_dry_`l
+> bl' = abn_precip_ngs_dry_`lbl' tot_abn_precip_ngs_wet_`lbl' = abn_precip_ngs_
+> wet_`lbl'"
+ 71.             local coll_mean_bins "`coll_mean_bins' avg_precip_spi_`lbl' = 
+> precip_spi_`lbl' avg_precip_gs_spi_`lbl' = precip_gs_spi_`lbl' avg_precip_ngs
+> _spi_`lbl' = precip_ngs_spi_`lbl'"
+ 72.         }
+ 73.         * Broad bins
+.         forvalues i = 1/`n_broad' {
+ 74.             local lbl : word `i' of `broad_labels'
+ 75.             local coll_sum_bins "`coll_sum_bins' precip_total_`lbl' = prec
+> ip_`lbl' precip_gs_total_`lbl' = precip_gs_`lbl' precip_ngs_total_`lbl' = pre
+> cip_ngs_`lbl'"
+ 76.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_`lbl' = ab
+> n_precip_`lbl' tot_abn_precip_dry_`lbl' = abn_precip_dry_`lbl' tot_abn_precip
+> _wet_`lbl' = abn_precip_wet_`lbl'"
+ 77.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_gs_`lbl' =
+>  abn_precip_gs_`lbl' tot_abn_precip_ngs_`lbl' = abn_precip_ngs_`lbl'"
+ 78.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_gs_dry_`lb
+> l' = abn_precip_gs_dry_`lbl' tot_abn_precip_gs_wet_`lbl' = abn_precip_gs_wet_
+> `lbl'"
+ 79.             local coll_sum_bins "`coll_sum_bins' tot_abn_precip_ngs_dry_`l
+> bl' = abn_precip_ngs_dry_`lbl' tot_abn_precip_ngs_wet_`lbl' = abn_precip_ngs_
+> wet_`lbl'"
+ 80.             local coll_mean_bins "`coll_mean_bins' avg_precip_spi_`lbl' = 
+> precip_spi_`lbl' avg_precip_gs_spi_`lbl' = precip_gs_spi_`lbl' avg_precip_ngs
+> _spi_`lbl' = precip_ngs_spi_`lbl'"
+ 81.         }
+ 82. 
+.         qui collapse ///
+>         (first) no_valid_pixels = no_valid_pixels ///
+>         (sum) precip_total = precip ///
+>             precip_gs_total = precip_gs ///
+>             precip_ngs_total = precip_ngs ///
+>             tot_abn_precip = abn_precip ///
+>             tot_abn_precip_gs = abn_precip_gs ///
+>             tot_abn_precip_ngs = abn_precip_ngs ///
+>             tot_abn_precip_dry = abn_precip_dry ///
+>             tot_abn_precip_wet = abn_precip_wet ///
+>             tot_abn_precip_gs_dry = abn_precip_gs_dry ///
+>             tot_abn_precip_gs_wet = abn_precip_gs_wet ///
+>             tot_abn_precip_ngs_dry = abn_precip_ngs_dry ///
+>             tot_abn_precip_ngs_wet = abn_precip_ngs_wet ///
+>             `coll_sum_bins' ///
+>             tot_gammafit_scaled = i_gammafit_scaled ///
+>         (mean) avg_precip_spi = precip_spi ///
+>             avg_precip_gs_spi = precip_gs_spi ///
+>             avg_precip_ngs_spi = precip_ngs_spi ///
+>             `coll_mean_bins' ///
+>         , by(DHS_code DHSREGEN cohort)
+ 83. 
+.         qui gen int_year = `dhs_year'
+ 84. 
+.         * Calculate shares (assuming reproductive_span is defined)
+.         di "Calculating shares..."
+ 85. 
+.         quietly {
+ 86.         * Overall shares (denominator = full reproductive span)
+.         gen share_abn_precip = tot_abn_precip / `reproductive_span'
+ 87.         gen share_abn_precip_dry = tot_abn_precip_dry / `reproductive_span
+> '
+ 88.         gen share_abn_precip_wet = tot_abn_precip_wet / `reproductive_span
+> '
+ 89. 
+.         * Growing season overall shares
+.         gen share_abn_precip_gs = tot_abn_precip_gs / `reproductive_span'
+ 90.         gen share_abn_precip_gs_dry = tot_abn_precip_gs_dry / `reproductiv
+> e_span'
+ 91.         gen share_abn_precip_gs_wet = tot_abn_precip_gs_wet / `reproductiv
+> e_span'
+ 92. 
+.         * Non-growing season overall shares
+.         gen share_abn_precip_ngs = tot_abn_precip_ngs / `reproductive_span'
+ 93.         gen share_abn_precip_ngs_dry = tot_abn_precip_ngs_dry / `reproduct
+> ive_span'
+ 94.         gen share_abn_precip_ngs_wet = tot_abn_precip_ngs_wet / `reproduct
+> ive_span'
+ 95. 
+.         * Age-bin-specific shares (denominator = number of years in each bin)
+.         * Fine bins
+.         forvalues i = 1/`n_bins' {
+ 96.             local s : word `i' of `bin_starts'
+ 97.             local e : word `i' of `bin_ends'
+ 98.             local lbl : word `i' of `bin_labels'
+ 99.             local bin_years = `e' - `s' + 1
+100. 
+.             gen share_abn_precip_`lbl'         = tot_abn_precip_`lbl'        
+>  / `bin_years'
+101.             gen share_abn_precip_dry_`lbl'     = tot_abn_precip_dry_`lbl' 
+>     / `bin_years'
+102.             gen share_abn_precip_wet_`lbl'     = tot_abn_precip_wet_`lbl' 
+>     / `bin_years'
+103. 
+.             gen share_abn_precip_gs_`lbl'      = tot_abn_precip_gs_`lbl'     
+>  / `bin_years'
+104.             gen share_abn_precip_gs_dry_`lbl'  = tot_abn_precip_gs_dry_`lb
+> l'  / `bin_years'
+105.             gen share_abn_precip_gs_wet_`lbl'  = tot_abn_precip_gs_wet_`lb
+> l'  / `bin_years'
+106. 
+.             gen share_abn_precip_ngs_`lbl'     = tot_abn_precip_ngs_`lbl'    
+>  / `bin_years'
+107.             gen share_abn_precip_ngs_dry_`lbl' = tot_abn_precip_ngs_dry_`l
+> bl' / `bin_years'
+108.             gen share_abn_precip_ngs_wet_`lbl' = tot_abn_precip_ngs_wet_`l
+> bl' / `bin_years'
+109.         }
+110.         * Broad bins
+.         forvalues i = 1/`n_broad' {
+111.             local s : word `i' of `broad_starts'
+112.             local e : word `i' of `broad_ends'
+113.             local lbl : word `i' of `broad_labels'
+114.             local bin_years = `e' - `s' + 1
+115. 
+.             gen share_abn_precip_`lbl'         = tot_abn_precip_`lbl'        
+>  / `bin_years'
+116.             gen share_abn_precip_dry_`lbl'     = tot_abn_precip_dry_`lbl' 
+>     / `bin_years'
+117.             gen share_abn_precip_wet_`lbl'     = tot_abn_precip_wet_`lbl' 
+>     / `bin_years'
+118. 
+.             gen share_abn_precip_gs_`lbl'      = tot_abn_precip_gs_`lbl'     
+>  / `bin_years'
+119.             gen share_abn_precip_gs_dry_`lbl'  = tot_abn_precip_gs_dry_`lb
+> l'  / `bin_years'
+120.             gen share_abn_precip_gs_wet_`lbl'  = tot_abn_precip_gs_wet_`lb
+> l'  / `bin_years'
+121. 
+.             gen share_abn_precip_ngs_`lbl'     = tot_abn_precip_ngs_`lbl'    
+>  / `bin_years'
+122.             gen share_abn_precip_ngs_dry_`lbl' = tot_abn_precip_ngs_dry_`l
+> bl' / `bin_years'
+123.             gen share_abn_precip_ngs_wet_`lbl' = tot_abn_precip_ngs_wet_`l
+> bl' / `bin_years'
+124.         }
+125.         }
+126. 
+. 
+.         * ASSERTION 2: tot_abn_precip should not exceed 30 for any cohort
+.         di "      Validating tot_abn_precip bounds..."
+127.         qui sum tot_abn_precip
+128.         if r(max) > 30 {
+129.             di as error "      ASSERTION FAILED: tot_abn_precip exceeds 30
+>  (max found: `r(max)')"
+130.             di as error "      This violates the reproductive span assumpt
+> ion of 30 years"
+131.             exit 459
+132.         }
+133.         di "      ✓ tot_abn_precip validation passed (max: `r(max)')"
+134. 
+.         * ASSERTION 3: share_abn_precip should not exceed 1 for any cohort
+.         di "      Validating share_abn_precip bounds..."
+135.         qui sum share_abn_precip
+136.         if r(max) > 1 {
+137.             di as error "      ASSERTION FAILED: share_abn_precip exceeds 
+> 1 (max found: `r(max)')"
+138.             di as error "      Share should be a proportion between 0 and 
+> 1"
+139.             exit 459
+140.         }
+141.         di "      ✓ share_abn_precip validation passed (max: `r(max)')"
+142. 
+.         local save_file "$cf/data/derived/dhs/04-dhs-region-cohort-precipitat
+> ion/03-cohort-metrics/`country_code'_metrics_`dhs_year'.dta"
+143.         
+.         local output_path "`save_file'"
+144.         //di "      Saving cohort metrics to: `output_path'"
+.         qui save "`output_path'", replace
+145.         
+.         qui count
+146.         di "    Cohort metrics saved (`r(N)' observations)"
+147.     end
+
+. 
+. *****************************************************************************
+> ***
+. * Statistical Analysis Functions
+. *****************************************************************************
+> ***
+.     ** Validate gamma distribution inputs
+.     capture program drop validate_gamma_inputs
+
+.     program define validate_gamma_inputs
+  1.         syntax, variables(string) 
+  2.         /*
+>         Program: ValidateGammaInputs
+>         Description: Validates inputs for gamma distribution fitting
+>         Parameters:
+>             variables: Space-separated list of precipitation variables
+>             region_list: List of DHS geographic units
+>         Output:
+>             Returns error if validation fails
+>         */
+.         di " Validating inputs for gamma distribution fitting ..."
+  3.         * Check if variables exist
+.         foreach var in `variables' {
+  4.             capture confirm variable `var'
+  5.             if _rc {
+  6.                 di as error "  ERROR: variable `var' not found in dataset.
+> "
+  7.             }
+  8.             
+.             di "Checking for missing values"
+  9.             qui count if missing(`var')
+ 10.             if r(N) > 0 {
+ 11.                 di "  WARNING: There are `r(N)' missing values in variable
+>  `var'"
+ 12.             }
+ 13. 
+.             di "Checking for negative values"
+ 14.             qui count if `var'  <  0 
+ 15.             if r(N) > 0 {
+ 16.                 di "  WARNING: There are `r(N)' negative values in variabl
+> e `var'"
+ 17.             }
+ 18.         }
+ 19. 
+. 
+.         di "  Validation passed"
+ 20.     end 
+
+. 
+. 
+. 
+.     capture program drop initialize_gamma_variables
+
+.     program define initialize_gamma_variables
+  1.         syntax, variables(string)
+  2. 
+.         /*
+>         Program: initialize_gamma_variables
+>         Description: Creates variables for storing gamma distribution results
+>         Parameters:
+>             variables: Space-separated list of precipitation variables
+>         Output:
+>             Creates alpha, beta, P, spi variables and abnormal precipitation 
+> indicators
+>         */
+.         
+.         di "  Initializing gamma distribution variables..."
+  3.         capture drop alpha beta P spi i_gammafit_scaled
+  4.         foreach var in `variables' {
+  5.             capture drop abn_`var'_wet abn_`var'_dry abn_`var' `var'_spi
+  6.         }
+  7.         
+.         * Create base gamma parameter variables
+.         gen alpha = .
+  8.         gen beta = .
+  9.         gen P = .
+ 10.         gen spi = .
+ 11. 
+.         * Create scaling indicator variable
+.         gen i_gammafit_scaled = 0
+ 12.         label var i_gammafit_scaled "Gamma fit scaling level (0=original, 
+> 1=scaled/10, 2=scaled/100)"
+ 13. 
+.         * Create abnormal precipitation indicators for each variable
+.         foreach var in `variables' {
+ 14.             di "    Creating variables for: `var'"
+ 15.             
+.             gen abn_`var'_wet = .
+ 16.             gen abn_`var'_dry = .
+ 17.             gen abn_`var' = .
+ 18.             gen `var'_spi = .
+ 19.             
+.             * Add variable labels
+.             label var abn_`var'_wet "Abnormally wet year for `var' (P ≥ 0.85)
+> "
+ 20.             label var abn_`var'_dry "Abnormally dry year for `var' (P ≤ 0.
+> 15)"
+ 21.             label var abn_`var' "Abnormal precipitation year for `var'"
+ 22.             label var `var'_spi "Standardized Precipitation Index for `var
+> '"
+ 23.         }
+ 24.         
+.         label var alpha "Gamma distribution shape parameter"
+ 25.         label var beta "Gamma distribution scale parameter"
+ 26.         label var P "Cumulative probability from gamma distribution"
+ 27.         label var spi "Standardized Precipitation Index"
+ 28.         
+.         di "  Gamma variables initialized successfully"
+ 29.     end
+
+. 
+. 
+.     capture program drop fit_gamma
+
+.     program define fit_gamma, rclass
+  1.         syntax, variable(string) region(real) [max_iter(integer 3)]
+  2. 
+.         /*
+>         Program: fit_gamma
+>         Description: Fits gamma distribution with iterative scaling for conve
+> rgence
+>         Parameters:
+>             variable: Precipitation variable name
+>             region: DHS region geographic unit ID
+>             max_iter: Maximum scaling iterations (default: 3)
+>         Output:
+>             Returns gamma parameters, scaling factor, and scale level used
+>         */
+.             
+.         
+.         local scaling_factor 1
+  3.         local iteration 1
+  4.         local success 0
+  5.         local scale_level 0
+  6.         local original_var "`variable'"
+  7.         local temp_var "`variable'_temp"
+  8.         
+.         di "Create temporary variable for scaling"
+  9.         gen `temp_var' = `variable'
+ 10.         
+.         di "Starting iterations ..."
+ 11.         while `iteration' <= `max_iter' & `success' == 0 {
+ 12.             
+.             if `iteration' == 1 {
+ 13.                 di "          Attempt 1: Using original scale"
+ 14.                 local scale_level = 0
+ 15.             }
+ 16.             else if `iteration' == 2 {
+ 17.                 di "          Attempt 2: Scaling to 1/10 of original"
+ 18.                 replace `temp_var' = `variable' / 10
+ 19.                 local scaling_factor = 10
+ 20.                 local scale_level = 1
+ 21.             }
+ 22.             else if `iteration' == 3 {
+ 23.                 di "          Attempt 3: Scaling to 1/100 of original"
+ 24.                 replace `temp_var' = `variable' / 100
+ 25.                 local scaling_factor = 100
+ 26.                 local scale_level = 2
+ 27.             }
+ 28.             
+.             * Attempt gamma fit
+.             capture gammafit `temp_var' if DHS_code == `region'
+ 29.             
+.             if _rc == 0 {
+ 30.                 local success 1
+ 31.                 di "          SUCCESS: Gamma fit converged with scaling fa
+> ctor 1/`scaling_factor'"
+ 32.                 
+.                 * Store parameters (adjust beta back to original scale)
+.                 local alpha_val = e(alpha)
+ 33.                 local beta_val = e(beta) * `scaling_factor'
+ 34.                 
+.                 return scalar alpha = `alpha_val'
+ 35.                 return scalar beta = `beta_val'
+ 36.                 return scalar scaling_factor = `scaling_factor'
+ 37.                 return scalar scale_level = `scale_level'
+ 38.                 return scalar converged = 1
+ 39.             }
+ 40.             else {
+ 41.                 di "          Attempt `iteration' failed"
+ 42.                 local ++iteration
+ 43.             }
+ 44.         }
+ 45.         
+.         * Clean up temporary variable
+.         drop `temp_var'
+ 46.         
+.         if `success' == 0 {
+ 47.             di "          ERROR: Gamma fitting failed at all scaling level
+> s"
+ 48.             return scalar converged = 0
+ 49.             return scalar scale_level = -1
+ 50.             return scalar scaling_factor = 0
+ 51.         }
+ 52.     end
+
+. 
+.     capture program drop fit_gamma_by_dhsregion
+
+.     program define fit_gamma_by_dhsregion
+  1.         syntax, variables(string)
+  2.         di "Fitting gamma distributions by geographic unit ..."
+  3. 
+.         qui levelsof DHS_code, local(dhscode)
+  4.         local n_regions = wordcount("`dhscode'")
+  5.         di "   Processing `n_regions' geographic units"
+  6. 
+.         foreach var in `variables' {
+  7.             di "     Variable: `var'"
+  8. 
+.             di "Initialize variable-specific counters"
+  9.             local var_success_original = 0 
+ 10.             local var_success_scale10 = 0 
+ 11.             local var_success_scale100 = 0
+ 12.             local var_fail_all = 0
+ 13.             
+.             foreach region in `dhscode' {
+ 14.                 di "Fit gamma with scaling"
+ 15.                 fit_gamma, variable("`var'") region(`region') max_iter(3)
+ 16.                 di "Gamma fitting successful, setting up trackers for succ
+> ess by scale level"
+ 17.                 if `r(converged)' == 1 {
+ 18.                     local alpha_est = r(alpha)
+ 19.                     local beta_est = r(beta)
+ 20.                     local scale_level = r(scale_level)
+ 21.                     
+.                     di "Track success by scale level"
+ 22.                     if `scale_level' == 0 {
+ 23.                         local ++var_success_original
+ 24.                     }
+ 25.                     else if `scale_level' == 1 {
+ 26.                         local ++var_success_scale10
+ 27.                         replace i_gammafit_scaled = max(i_gammafit_scaled,
+>  1) if DHS_code == `region'
+ 28.                     }
+ 29.                     else if `scale_level' == 2 {
+ 30.                         local ++var_success_scale100
+ 31.                         replace i_gammafit_scaled = 2 if DHS_code == `regi
+> on'
+ 32.                     }
+ 33.                 di "Store gamma parameters"
+ 34. 
+.                     quietly {
+ 35.                     replace alpha = `alpha_est' if DHS_code == `region'
+ 36.                     replace beta = `beta_est' if DHS_code == `region'
+ 37.                     
+.                     * Calculate cumulative probability and SPI
+.                     replace P = gammap(`alpha_est', `var'/`beta_est') if DHS_
+> code == `region'
+ 38.                     replace spi = invnormal(P) if DHS_code == `region'
+ 39.                     
+.                     * Create abnormal precipitation indicators
+.                     replace abn_`var'_wet = (P >= 0.85) if DHS_code == `regio
+> n'
+ 40.                     replace abn_`var'_dry = (P <= 0.15) if DHS_code == `re
+> gion'
+ 41.                     replace abn_`var' = (P >= 0.85 | P <= 0.15) if DHS_cod
+> e == `region'
+ 42.                     replace `var'_spi = spi if DHS_code == `region'
+ 43.                     }
+ 44.                 }
+ 45.                 else {
+ 46.                     local ++var_fail_all
+ 47.                 }
+ 48.             }
+ 49.             di "Store statistics for EACH variable in globals"
+ 50.             global gamma_`var'_total_units = `n_regions'
+ 51.             di "Saved total regions: `n_regions'"
+ 52.             global gamma_`var'_fit_unsc = `var_success_original'
+ 53.             di "Saved unscaled successes: `var_success_original'"
+ 54.             global gamma_`var'_fit_scale10 = `var_success_scale10'
+ 55.             di "Saved scale/10 successes: `var_success_scale10'"
+ 56.             global gamma_`var'_fit_scale100 = `var_success_scale100'
+ 57.             di "Saved scale/100 successes: `var_success_scale100'"
+ 58.             global gamma_`var'_fail_all = `var_fail_all'
+ 59.             di "Saved total failures: `var_fail_all'"
+ 60.             
+.             di "Report variable-specific results"
+ 61.             di "        Original scale: `var_success_original'/`n_regions'
+> "
+ 62.             di "        Scale/10:       `var_success_scale10'/`n_regions'"
+ 63.             di "        Scale/100:      `var_success_scale100'/`n_regions'
+> "
+ 64.             di "        Failed all:     `var_fail_all'/`n_regions'"
+ 65.         }
+ 66.             preserve 
+ 67.                 bys DHS_code: keep if _n == 1
+ 68.                 qui sum alpha if !missing(alpha)
+ 69.                 global alpha_mean = r(mean)
+ 70.                 qui sum beta if !missing(beta)
+ 71.                 global beta_mean = r(mean)
+ 72.             restore
+ 73.             
+.             di ""
+ 74.             di "  ============================================"
+ 75.             di "  GAMMA FITTING SUMMARY"
+ 76.             di "  ============================================"
+ 77.             di "  Total geographic units: `n_regions'"
+ 78.             foreach var in `variables' {
+ 79.                 di "  --- `var' ---"
+ 80.                 di "    Success (original):  ${gamma_`var'_fit_unsc}"
+ 81.                 di "    Success (scale/10):  ${gamma_`var'_fit_scale10}"
+ 82.                 di "    Success (scale/100): ${gamma_`var'_fit_scale100}"
+ 83.                 di "    Failed at all:       ${gamma_`var'_fail_all}"
+ 84.             }
+ 85.             di "  ============================================"
+ 86.     end 
+
+. 
+.     capture program drop GammaDistributionFitter
+
+.     program define GammaDistributionFitter 
+  1.         syntax, [variables(string)]
+  2.         /*
+>         Main function that orchestrates gamma distribution fitting process. 
+>         Parameters:
+>             variables: space-separated list of precipitation variables
+>             
+>         */
+. 
+.         di "Starting gamma distribution fitting process with scaling"
+  3. 
+.         * Set default variables if not specified
+.         local varlist "`variables'"
+  4.         if "`varlist'" == "" {
+  5.             local varlist "precip precip_gs precip_ngs"
+  6.         }
+  7. 
+.         * Step 1: Validate inputs
+.         validate_gamma_inputs, variables("`varlist'")
+  8. 
+.         * Step 2: Initialise variables
+.         initialize_gamma_variables, variables("`varlist'")
+  9. 
+.         * Step 3: Fit distributions with scaling
+.         fit_gamma_by_dhsregion, variables("`varlist'")
+ 10.        di " Gamma distribution fitting with scaling completed successfully
+> ."
+ 11.     end
+
+. 
+.     capture program drop SaveGammaScalingStatistics
+
+.     program define SaveGammaScalingStatistics
+  1.         syntax, country(string) output_file(string) [append]
+  2.         
+.         preserve
+  3.             clear
+  4.             set obs 1
+  5.             
+.             gen str50 country = "`country'"
+  6.             gen n_regions = ${gamma_precip_total_units}
+  7.             
+.             * Store stats for each variable
+.             foreach var in precip precip_gs precip_ngs {
+  8.                 quietly {
+  9.                 gen `var'_success_original = ${gamma_`var'_fit_unsc}
+ 10.                 gen `var'_success_scale10 = ${gamma_`var'_fit_scale10}
+ 11.                 gen `var'_success_scale100 = ${gamma_`var'_fit_scale100}
+ 12.                 gen `var'_fail_all = ${gamma_`var'_fail_all}
+ 13.                 
+.                 * Calculate percentages
+.                 gen `var'_pct_original = 100 * `var'_success_original / n_reg
+> ions
+ 14.                 gen `var'_pct_scale10 = 100 * `var'_success_scale10 / n_re
+> gions
+ 15.                 gen `var'_pct_scale100 = 100 * `var'_success_scale100 / n_
+> regions
+ 16.                 gen `var'_pct_failed = 100 * `var'_fail_all / n_regions
+ 17.                 }
+ 18.             }
+ 19.             
+.             if "`append'" != "" {
+ 20.                 capture confirm file "`output_file'"
+ 21.                 if _rc == 0 {
+ 22.                     append using "`output_file'"
+ 23.                 }
+ 24.             }
+ 25.             
+.             save "`output_file'", replace
+ 26.         restore
+ 27.         
+.         di "  Gamma scaling statistics saved for `country'"
+ 28.     end
+
+. 
+. 
+.     capture program drop LogGammaFittingFailures
+
+.     program define LogGammaFittingFailures
+  1.         syntax, country(string) output_file(string) [append]
+  2.         
+.         /*
+>         Program: LogGammaFittingFailures
+>         Description: Creates a dataset of DHS region units that failed gamma 
+> fitting
+>         Parameters:
+>             country: Country name
+>             output_file: Path to output file
+>             append: If specified, appends to existing file
+>         Output:
+>             Dataset with DHS region units and which variables failed
+>         */
+.         
+.         preserve
+  3.             * Keep one observation per DHS region
+.             bysort DHS_code: keep if _n == 1
+  4.             
+.             * Create failure indicators for each variable
+.             quietly {
+  5.             gen byte failed_precip = missing(abn_precip)
+  6.             gen byte failed_precip_gs = missing(abn_precip_gs)
+  7.             gen byte failed_precip_ngs = missing(abn_precip_ngs)
+  8.             }
+  9.             * Keep only units with at least one failure
+.             keep if failed_precip == 1 | failed_precip_gs == 1 | failed_preci
+> p_ngs == 1
+ 10.             
+.             qui count
+ 11.             if r(N) > 0 {
+ 12.                 * Add country identifier
+.                 gen str50 country = "`country'"
+ 13.                 
+.                 * Keep relevant variables
+.                 keep country DHS_code failed_precip failed_precip_gs failed_p
+> recip_ngs
+ 14.                 
+.                 * Add labels
+.                 label var country "Country name"
+ 15.                 label var DHS_code "DHS Region ID"
+ 16.                 label var failed_precip "Failed to fit gamma for total pre
+> cip"
+ 17.                 label var failed_precip_gs "Failed to fit gamma for growin
+> g season precip"
+ 18.                 label var failed_precip_ngs "Failed to fit gamma for non-g
+> rowing season precip"
+ 19.                 
+.                 if "`append'" != "" {
+ 20.                     capture confirm file "`output_file'"
+ 21.                     if _rc == 0 {
+ 22.                         append using "`output_file'"
+ 23.                     }
+ 24.                 }
+ 25.                 
+.                 save "`output_file'", replace
+ 26.                 
+.                 qui count
+ 27.                 di "  Logged `r(N)' DHS regions with gamma fitting failure
+> s for `country'"
+ 28.             }
+ 29.             else {
+ 30.                 di "  No gamma fitting failures to log for `country'"
+ 31.             }
+ 32.         restore
+ 33.     end
+
+. 
+.     capture program drop GenerateGammaScalingTable
+
+.     program define GenerateGammaScalingTable
+  1.         
+.         * Load gamma scaling statistics
+.         use "$cf/data/derived/dhs/04-dhs-region-cohort-precipitation/02-gamma
+> fit-data/gamma_scaling_statistics.dta", clear
+  2.         duplicates drop country, force
+  3.         sort country
+  4.         
+.         * Open file for writing
+.         file open latexfile using "$cf_overleaf/table/dhs_gamma_scaling_summa
+> ry.tex", write replace
+  5.         
+.         * Write table header - showing failures at each stage
+.         file write latexfile "\begin{tabular}{l r | rrr | rrr | rrr}" _n
+  6.         file write latexfile "\toprule" _n
+  7.         file write latexfile "& & \multicolumn{3}{c|}{Total Precip} & \mul
+> ticolumn{3}{c|}{Growing Season} & \multicolumn{3}{c}{Non-Growing Season} \\" 
+> _n
+  8.         file write latexfile "Country & Units & Fail 1x & Fail /10 & Fail 
+> /100 & Fail 1x & Fail /10 & Fail /100 & Fail 1x & Fail /10 & Fail /100 \\" _n
+  9.         file write latexfile "& (1) & (2) & (3) & (4) & (5) & (6) & (7) & 
+> (8) & (9) & (10) \\" _n
+ 10.         file write latexfile "\midrule" _n
+ 11.         
+.         * Initialize totals for each variable
+.         local total_units = 0
+ 12.         foreach var in precip precip_gs precip_ngs {
+ 13.             local total_`var'_fail1x = 0
+ 14.             local total_`var'_fail10 = 0
+ 15.             local total_`var'_fail100 = 0
+ 16.         }
+ 17.         
+.         * Write data rows
+.         local N = _N
+ 18.         forval i = 1/`N' {
+ 19.             local cntry = country[`i']
+ 20.             local n_sub = n_regions[`i']
+ 21.             
+.             * Accumulate totals
+.             local total_units = `total_units' + `n_sub'
+ 22.             
+.             * Build the row string
+.             local row_string "`cntry' & `n_sub'"
+ 23.             
+.             foreach var in precip precip_gs precip_ngs {
+ 24.                 local orig = `var'_success_original[`i']
+ 25.                 local s10 = `var'_success_scale10[`i']
+ 26.                 local s100 = `var'_success_scale100[`i']
+ 27.                 local fail = `var'_fail_all[`i']
+ 28.                 
+.                 * Calculate cumulative failures
+.                 * Fail 1x = units that didn't succeed at original scale
+.                 local fail_1x = `n_sub' - `orig'
+ 29.                 * Fail /10 = units that didn't succeed at original OR /10
+.                 local fail_10 = `n_sub' - `orig' - `s10'
+ 30.                 * Fail /100 = units that failed all attempts (same as fail
+> _all)
+.                 local fail_100 = `fail'
+ 31.                 
+.                 local row_string "`row_string' & `fail_1x' & `fail_10' & `fai
+> l_100'"
+ 32.                 
+.                 * Accumulate totals
+.                 local total_`var'_fail1x = `total_`var'_fail1x' + `fail_1x'
+ 33.                 local total_`var'_fail10 = `total_`var'_fail10' + `fail_10
+> '
+ 34.                 local total_`var'_fail100 = `total_`var'_fail100' + `fail_
+> 100'
+ 35.             }
+ 36.             
+.             file write latexfile "`row_string' \\" _n
+ 37.         }
+ 38.         
+.         * Write totals row
+.         file write latexfile "\midrule" _n
+ 39.         local total_row "Total & `total_units'"
+ 40.         foreach var in precip precip_gs precip_ngs {
+ 41.             local total_row "`total_row' & `total_`var'_fail1x' & `total_`
+> var'_fail10' & `total_`var'_fail100'"
+ 42.         }
+ 43.         file write latexfile "`total_row' \\" _n
+ 44.         
+.         * Write table footer
+.         file write latexfile "\bottomrule" _n
+ 45.         file write latexfile "\end{tabular}" _n
+ 46.         file close latexfile
+ 47.         
+.         di "Gamma scaling LaTeX table saved to: $cf_overleaf/table/dhs_gamma_
+> scaling_summary.tex"
+ 48.         
+.         * Display failure rate summary
+.         di "  Cumulative Failure Rates:"
+ 49.         foreach var in precip precip_gs precip_ngs {
+ 50.             di "  --- `var' ---"
+ 51.             local pct_fail1x = round(100 * `total_`var'_fail1x' / `total_u
+> nits', 0.1)
+ 52.             local pct_fail10 = round(100 * `total_`var'_fail10' / `total_u
+> nits', 0.1)
+ 53.             local pct_fail100 = round(100 * `total_`var'_fail100' / `total
+> _units', 0.1)
+ 54.             di "    Failed at 1x:    `pct_fail1x'%"
+ 55.             di "    Failed at /10:   `pct_fail10'%"
+ 56.             di "    Failed at /100:  `pct_fail100'%"
+ 57.         }
+ 58.     end
+
+. 
+. 
+. *****************************************************************************
+> ***
+. * Precipitation Data Processing Workflow
+. *****************************************************************************
+> ***
+. 
+.     capture program drop PrecipitationDataProcessor
+
+.     program define PrecipitationDataProcessor
+  1.         syntax, method(string) country_code(string) [dhs_years(string) max
+> _cohort(string)]
+  2.         /*
+>         Program: PrecipitationDataProcessor
+>         Description: Orchestrates the precipitation data processing pipeline
+>         Parameters:
+>             method: "load_and_aggregate" or "fit_gamma_and_save"
+>             country_code: Three-letter country code (e.g., "BEN", "BWA")
+>             dhs_years: Space-separated list of dhs years (optional)
+>             max_cohort: Maximum cohort year (optional)
+>         Output:
+>             Generates annual precipitation datasets and fits gamma distributi
+> ons as needed.
+>         */
+.         * Get country name from code
+.         GetCountryName, code("`country_code'")
+  3.         local country_name "`r(name)'"
+  4.         
+.         if "`country_name'" == "" {
+  5.             di as error "ERROR: Unknown country code: `country_code'"
+  6.             exit 198
+  7.         }
+  8.         if "`method'" == "load_and_aggregate" {
+  9.             di "=== Starting precipitation data processing for `country_na
+> me' (`country_code') ==="
+ 10.             load_and_process_era, country_code("`country_code'")
+ 11.             * Report summary
+.             qui count
+ 12.             di _n "=== Precipitation data processing completed successfull
+> y ==="
+ 13.             di "    Final annual dataset: `r(N)' observations"
+ 14.             di "    Country: `country_name'"
+ 15.             di "    $cf/data/derived/dhs/04-dhs-region-cohort-precipitatio
+> n/01-annual-data/`country_name'_precip_annual.dta"
+ 16.             
+.             * Display variable summary
+.             foreach var in precip precip_gs precip_ngs {
+ 17.                 qui sum `var'
+ 18.                 di "    `var': mean=`=round(r(mean), 0.1)', sd=`=round(r(s
+> d), 0.1)'"
+ 19.             }
+ 20.         }
+ 21. 
+.         else if "`method'" == "fit_gamma_and_save" {
+ 22.             di "=== Starting gamma distribution fitting for `country_name'
+>  (`country_code') ==="
+ 23.             di "=== Using robust scaling (1x → 1/10 → 1/100) ==="
+ 24.             
+.             * STEP: Create gamma fit dataset with robust scaling
+.             create_gammafit_dataset, country_code("`country_code'")
+ 25.             
+.             * Load and display gamma fit results
+.             local gamma_file "$cf/data/derived/dhs/04-dhs-region-cohort-preci
+> pitation/02-gammafit-data/`country_code'_gammafit.dta"
+ 26.             use "`gamma_file'", clear
+ 27.             * Report gamma fitting summary
+.             di _n "=== Gamma distribution fitting completed successfully ==="
+ 28.             di "    Output: `gamma_file'"
+ 29.             
+.             * Count observations with scaling
+.             qui sum i_gammafit_scaled
+ 30.             local scaled_count = r(N) * r(mean)
+ 31.             local total_obs = r(N)
+ 32.             // local scaled_percent = (r(mean)) * 100
+.             
+.             di "    Total observations: `total_obs'"
+ 33.             * Display gamma parameter summary
+.             preserve
+ 34.                 * Keep unique DHS units for parameter summary
+.                 bysort DHS_code: keep if _n == 1
+ 35.                 qui sum alpha
+ 36.                 di "    Alpha (shape): mean=`=round(r(mean), 0.003)', sd=`
+> =round(r(sd), 0.003)'"
+ 37.                 qui sum beta
+ 38.                 di "    Beta (scale): mean=`=round(r(mean), 0.1)', sd=`=ro
+> und(r(sd), 0.1)'"
+ 39.             restore
+ 40. 
+.             * Display SPI summary
+.             foreach var in precip_spi precip_gs_spi precip_ngs_spi {
+ 41.                 capture confirm variable `var'
+ 42.                 if !_rc {
+ 43.                     qui sum `var'
+ 44.                     di "    `var': mean=`=round(r(mean), 0.003)', sd=`=rou
+> nd(r(sd), 0.003)'"
+ 45.                 }
+ 46.             }
+ 47. 
+.             * Report on abnormal precipitation
+.             foreach type in wet dry {
+ 48.                 capture confirm variable abn_precip_`type'
+ 49.                 if !_rc {
+ 50.                     qui sum abn_precip_`type'
+ 51.                     di "    Abnormal `type' years: `=round(r(mean)*100, 0.
+> 1)'%"
+ 52.                 }
+ 53.             }
+ 54.         }
+ 55.         else if "`method'" == "validate_inputs" {
+ 56.             * Validation method to check data quality
+.             di "=== Validating precipitation data for `country_name' (`countr
+> y_code') ==="
+ 57.             
+.             * Check if annual file exists
+.             local annual_file "$cf/data/derived/dhs/04-dhs-region-cohort-prec
+> ipitation/01-annual-data/`country_name'_precip_annual.dta"
+ 58.             capture confirm file "`annual_file'"
+ 59.             if _rc {
+ 60.                 di as error "  ERROR: Annual precipitation file not found:
+>  `annual_file'"
+ 61.                 exit 601
+ 62.             }
+ 63.             
+.             use "`annual_file'", clear
+ 64.             
+.             di "  Data validation results:"
+ 65.             di "    Total observations: `c(N)'"
+ 66.             di "    Time range: `=year[1]' to `=year[_N]'"
+ 67.             
+.             * Check for missing values
+.             foreach var in precip precip_gs precip_ngs {
+ 68.                 qui count if missing(`var')
+ 69.                 if r(N) > 0 {
+ 70.                     di "    WARNING: `var' has `r(N)' missing values"
+ 71.                 }
+ 72.                 else {
+ 73.                     di "    ✓ `var': No missing values"
+ 74.                 }
+ 75.             }
+ 76.             
+.             * Check value ranges
+.             foreach var in precip precip_gs precip_ngs {
+ 77.                 qui sum `var'
+ 78.                 di "    `var' range: `=round(r(min), 0.1)' to `=round(r(ma
+> x), 0.1)'"
+ 79.                 if r(min) < 0 {
+ 80.                     di "    WARNING: `var' has negative values"
+ 81.                 }
+ 82.             }
+ 83.             
+.             * Check DHS_code units
+.             qui levelsof DHS_code
+ 84.             local n_units = wordcount("`r(levels)'")
+ 85.             di "    DHS_code units: `n_units'"
+ 86.             
+.             di "  ✓ Data validation completed"
+ 87.         }
+ 88.         else if "`method'" == "quick_gamma_test" {
+ 89.             * Quick test of gamma fitting on a subset of data
+.             di "=== Quick gamma fitting test for `country_name' (`country_cod
+> e') ==="
+ 90.             
+.             local annual_file "$cf/data/derived/dhs/04-dhs-region-cohort-prec
+> ipitation/01-annual-data/`country_name'_precip_annual.dta"
+ 91.             capture confirm file "`annual_file'"
+ 92.             if _rc {
+ 93.                 di as error "  ERROR: Annual precipitation file not found:
+>  `annual_file'"
+ 94.                 exit 601
+ 95.             }
+ 96.             
+.             use "`annual_file'", clear
+ 97.             
+.             * Test on first 5 DHS_code units
+.             levelsof DHS_code, local(all_regions)
+ 98.             local test_regions ""
+ 99.             local count = 0
+100.             foreach region in `all_regions' {
+101.                 local ++count
+102.                 local test_regions "`test_regions' `region'"
+103.                 if `count' >= 5 continue, break
+104.             }
+105.             
+.             di "  Testing gamma fitting on `=wordcount("`test_regions'")' DHS
+>  regions ..."
+106.             
+.             * Initialize variables for test
+.             gen alpha_test = .
+107.             gen beta_test = .
+108.             gen scaling_used = 0
+109.             
+.             local success_count = 0
+110.             local fail_count = 0
+111.             local scaled_count = 0
+112.             
+.             foreach region in `test_regions' {
+113.                 di "    Testing DHS region `region'..."
+114.                 
+.                 capture fit_gamma, variable("precip") region(`region') max_it
+> er(3)
+115.                 if `r(converged)' == 1 {
+116.                     local ++success_count
+117.                     if `r(scaling_factor)' > 1 {
+118.                         local ++scaled_count
+119.                     }
+120.                     di "      ✓ Success (scaling: `r(scaling_factor)')"
+121.                 }
+122.                 else {
+123.                     local ++fail_count
+124.                     di "      ✗ Failed"
+125.                 }
+126.             }
+127.             
+.             di _n "  Quick test results:"
+128.             di "    Successful fits: `success_count'"
+129.             di "    Failed fits: `fail_count'"
+130.             di "    Required scaling: `scaled_count'"
+131.             di "    Success rate: `=round((`success_count'/(`success_count
+> ' + `fail_count'))*100, 0.1)'%"
+132.         }
+133.         
+.         else {
+134.             di as error "ERROR: Unknown method: `method'"
+135.             di "Available methods:"
+136.             di "  - load_and_aggregate: Process ERA data and create annual
+>  dataset"
+137.             di "  - fit_gamma_and_save: Fit gamma distributions with robus
+> t scaling"
+138.             di "  - validate_inputs: Check data quality and completeness"
+139.             di "  - quick_gamma_test: Test gamma fitting on a subset of da
+> ta"
+140.             exit 198
+141.         }
+142.     end
+
+. 
+. 
+. *****************************************************************************
+> ***
+. * Main code workflow
+. *****************************************************************************
+> ***
+.     capture program drop PrecipitationAnalysisWorkflow
+
+.     program define PrecipitationAnalysisWorkflow
+  1.         syntax, method(string) country_code(string) [dhs_years(string) rep
+> roductive_span(real 30) cleanup(string) temp_files(string) target_age(real 45
+> )]
+  2.         
+.         * Get country name from code
+.         GetCountryName, code("`country_code'")
+  3.         local country_name "`r(name)'"
+  4.         
+.         if "`country_name'" == "" {
+  5.             di as error "ERROR: Unknown country code: `country_code'"
+  6.             exit 198
+  7.         }
+  8.         
+.         if "`method'" == "run_full_analysis" {
+  9.             di ""
+ 10.             di "=== Starting precipitation analysis for `country_name' (`c
+> ountry_code') ==="
+ 11.             di "=== With Robust Gamma Fitting (Automatic Scaling) ==="
+ 12.             local start_time = clock("$S_TIME", "hms")
+ 13.             
+.             * Create directories for outputs and diagnostics
+.             capture mkdir "$cf/data/derived/dhs/04-dhs-region-cohort-precipit
+> ation"
+ 14.             capture mkdir "$cf/figures"
+ 15.             capture mkdir "$cf/figures/gammafit-scaling-logs"
+ 16.             
+.             * Check DHS mapping file for dhs years
+.             preserve 
+ 17.                 local mapping_file "$cf/data/derived/dhs/00-dhs-country-su
+> rveyyear-mappings/surveycd_reg_year.dta"
+ 18.                 di "  Checking DHS mapping file: `mapping_file'"
+ 19.                 
+.                 capture confirm file "`mapping_file'"
+ 20.                 if _rc {
+ 21.                     di as error "  ERROR: DHS mapping file not found"
+ 22.                     restore
+ 23.                     exit 601
+ 24.                 }
+ 25.                 
+.                 use "`mapping_file'", clear
+ 26.                 
+.                 qui count
+ 27.                 di "  DHS file has `r(N)' total records"
+ 28.                 * Some countries have different names in the mapping file 
+> vs. the ERA5 data files
+.                 local mapping_cname "`country_name'"
+ 29.                 if "`country_name'" == "Ivory Coast" local mapping_cname "
+> Cote d'Ivoire"
+ 30.                 di "  Keeping only the records for `mapping_cname'"
+ 31.                 keep if COUNTRY == "`mapping_cname'"
+ 32.                 
+.                 qui count
+ 33.                 if r(N) == 0 {
+ 34.                     di as error "  ERROR: No dhs years found for `country_
+> name' in DHS mapping"
+ 35.                     restore
+ 36.                     exit 459
+ 37.                 }
+ 38.                 
+.                 ren year dhs_year
+ 39.                 levelsof dhs_year, local(dhs_years) 
+ 40.                 local n_dhs = wordcount("`dhs_years'")
+ 41.                 di "  Found `n_dhs' dhs years: `dhs_years'"
+ 42.             restore
+ 43.             
+.             * STEP 1: Load and process ERA data with phenology
+.             di _n "STEP 1: Loading and processing ERA precipitation data..."
+ 44.             capture noisily PrecipitationDataProcessor, method("load_and_a
+> ggregate") country_code("`country_code'") 
+ 45.             if _rc {
+ 46.                 di as error "  FAILED at load_and_aggregate step"
+ 47.                 exit _rc
+ 48.             }
+ 49.             di "  ✓ STEP 1 completed successfully"
+ 50.             
+.             * STEP 2: Fit gamma distributions with robust scaling
+.             di _n "STEP 2: Fitting gamma distributions with automatic scaling
+> ..."
+ 51.             capture noisily PrecipitationDataProcessor, method("fit_gamma_
+> and_save") country_code("`country_code'") 
+ 52.             if _rc {
+ 53.                 di as error "  FAILED at gamma fitting step"
+ 54.                 exit _rc
+ 55.             }
+ 56.             di "  ✓ STEP 2 completed successfully"
+ 57.             SaveGammaScalingStatistics, ///
+>                 country("`country_name'") ///
+>                 output_file("$cf/data/derived/dhs/04-dhs-region-cohort-precip
+> itation/02-gammafit-data/gamma_scaling_statistics.dta") ///
+>                 append
+ 58. 
+.             * Log any gamma fitting failures for manual examination
+.             LogGammaFittingFailures, ///
+>                 country("`country_name'") ///
+>                 output_file("$cf/data/derived/dhs/04-dhs-region-cohort-precip
+> itation/02-gammafit-data/gamma_fitting_failures.dta") ///
+>                 append
+ 59.             
+.             * STEP 3: Process cohort metrics by dhs year
+.             di _n "STEP 3: Processing cohort metrics by dhs year..."
+ 60.             local temp_files ""
+ 61.             local dhs_num = 0
+ 62.             
+.             * Check cohort file exists
+.             local cohort_file "$cf/data/derived/dhs/00-dhs-country-surveyyear
+> -mappings/dhs-cohort-year.dta"
+ 63.             capture confirm file "`cohort_file'"
+ 64.             if _rc {
+ 65.                 di as error "    ERROR: Cohort year file not found: `cohor
+> t_file'"
+ 66.                 exit 601
+ 67.             }
+ 68.             
+.             foreach dhs_year in `dhs_years' {
+ 69.                 local ++dhs_num
+ 70.                 di "    Census `dhs_num'/`n_dhs': `dhs_year'"
+ 71.                 
+.                 use "`cohort_file'", clear
+ 72.                 
+.                 * Filter to relevant years and cohorts
+.                 keep if year <= `dhs_year'
+ 73.                 keep if cohort <= `dhs_year' - 15
+ 74.                 
+.                 qui count
+ 75.                 di "      Cohort-year combinations: `r(N)'"
+ 76.                 
+.                 if r(N) == 0 {
+ 77.                     di "      WARNING: No valid cohort-year combinations f
+> or dhs `dhs_year'"
+ 78.                     continue
+ 79.                 }
+ 80.                 
+.                 local precip_file "$cf/data/derived/dhs/04-dhs-region-cohort-
+> precipitation/01-annual-data/`country_name'_precip_annual.dta"
+ 81.                 
+.                 capture confirm file "`precip_file'"
+ 82.                 if _rc {
+ 83.                     di as error "      ERROR: Precipitation file not found
+> : `precip_file'"
+ 84.                     continue
+ 85.                 }
+ 86.                 
+.                 di "      Joining with precipitation data"
+ 87.                 capture noisily joinby year using "`precip_file'"
+ 88.                 if _rc {
+ 89.                     di as error "      ERROR: Failed to join precipitation
+>  data"
+ 90.                     continue
+ 91.                 }
+ 92. 
+.                 * ASSERTION 1: Each cohort should have maximum 30 year observ
+> ations
+.                 di "      Verifying cohort-year counts..."
+ 93.                 preserve
+ 94.                     bys DHS_code cohort: gen cohort_year_count = _N
+ 95.                     qui sum cohort_year_count
+ 96.                     if r(max) > 30 {
+ 97.                         di as error "      ASSERTION FAILED: Found cohort 
+> with `r(max)' year observations (max should be 30)"
+ 98.                         di as error "      This violates the reproductive 
+> span assumption"
+ 99.                         restore
+100.                         exit 459
+101.                     }
+102.                     di "      ✓ Cohort-year count validation passed (max: 
+> `r(max)' years)"
+103.                 restore
+104. 
+.                 * Calculate cohort metrics
+.                 local temp_file "`country_code'_metrics_`dhs_year'"
+105.                 
+.                 capture noisily cohort_metrics_calculator, ///
+>                     country_code("`country_code'") ///
+>                     reproductive_span(`reproductive_span') ///
+>                     dhs_year(`dhs_year') ///
+>                     save_file("`temp_file'")
+106.                 
+.                 if _rc == 0 {
+107.                     local temp_files "`temp_files' `temp_file'"
+108.                     di "      ✓ Census `dhs_year' processed successfully"
+109.                 }
+110.                 else {
+111.                     di "      WARNING: Failed to calculate metrics for dhs
+>  `dhs_year'"
+112.                 }
+113.             }
+114. 
+.             if "`temp_files'" == "" {
+115.                 di as error "  ERROR: No dhs years successfully processed"
+116.                 exit 459
+117.             }
+118.             
+.             di "  ✓ STEP 3 completed: `=wordcount("`temp_files'")' dhs years 
+> processed"
+119.             
+.             * STEP 4: Combine dhs datasets and apply selection criteria
+.             di _n "STEP 4: Combining dhs datasets and applying selection crit
+> eria..."
+120.             PrecipitationAnalysisWorkflow, method("combine_and_select_dhs"
+> ) ///
+>                 country_code("`country_code'") ///
+>                 temp_files("`temp_files'") ///
+>                 target_age(`target_age')
+121.             di "  ✓ STEP 4 completed successfully"
+122.              
+.             * Cleanup temporary files if requested
+.             if "`cleanup'" == "true" {
+123.                 di _n "STEP 5: Cleaning up temporary files..."
+124.                 PrecipitationAnalysisWorkflow, method("cleanup_temp_files"
+> ) ///
+>                     country_code("`country_code'") ///
+>                     temp_files("`temp_files'")
+125.                 di "  ✓ Temporary files cleaned up"
+126.             }
+127.             
+.             di _n "=== Analysis complete for `country_name' (`country_code') 
+> ==="
+128.         }
+129.         
+.         else if "`method'" == "combine_and_select_dhs" {
+130.             di "    Combining dhs datasets..."
+131.             
+.             local first_file: word 1 of `temp_files'
+132.             
+.             capture confirm file "$cf/data/derived/dhs/04-dhs-region-cohort-p
+> recipitation/03-cohort-metrics/`first_file'.dta"
+133.             if _rc {
+134.                 di as error "    ERROR: First temp file not found: `first_
+> file'.dta"
+135.                 exit 601
+136.             }
+137.             
+.             use "$cf/data/derived/dhs/04-dhs-region-cohort-precipitation/03-c
+> ohort-metrics/`first_file'.dta", clear
+138.             
+.             qui count
+139.             local first_obs = r(N)
+140.             di "      Loaded first file: `first_obs' observations"
+141.             
+.             local remaining_files: list temp_files - first_file
+142.             local remaining_count = wordcount("`remaining_files'")
+143.             
+.             if `remaining_count' > 0 {
+144.                 di "      Appending `remaining_count' additional files..."
+145.                 foreach file in `remaining_files' {
+146.                     capture append using "$cf/data/derived/dhs/04-dhs-regi
+> on-cohort-precipitation/03-cohort-metrics/`file'.dta"
+147.                     if _rc {
+148.                         di "        WARNING: Could not append `file'.dta"
+149.                     }
+150.                 }
+151.                 qui count
+152.                 di "      Combined total: `r(N)' observations"
+153.             }
+154.             
+.             local before_cleaning = r(N)
+155.             drop if missing(cohort) | missing(int_year) | missing(DHS_code
+> )
+156.             qui count
+157.             local after_cleaning = r(N)
+158.             local dropped = `before_cleaning' - `after_cleaning'
+159.             
+.             if `dropped' > 0 {
+160.                 di "      Dropped `dropped' observations with missing key 
+> variables"
+161.             }
+162.             di "      Clean observations: `after_cleaning'"
+163.             
+.             sort DHS_code cohort int_year
+164.             
+.             di "    Applying dhs selection criteria..."
+165.             
+.             * Create dhs selection variables
+.             gen age_in_dhs = int_year - cohort
+166.             
+.             bys DHS_code cohort: egen max_age_observed = max(age_in_dhs)
+167.             gen cohort_reaches_reproductive = (max_age_observed >= 15)
+168.             gen exposure_years = max(0, min(age_in_dhs, 44) - 15 + 1)
+169.             replace exposure_years = 0 if age_in_dhs < 15
+170.             gen full_exposure = (exposure_years == 30)
+171.             
+.             drop max_age_observed
+172.             
+.             qui count if full_exposure == 1
+173.             local full_exposure_count = r(N)
+174.             di "      Cohorts with full 30-year exposure: `full_exposure_c
+> ount'"
+175.             
+.             qui count
+176.             local final_obs = r(N)
+177.             
+.             if `final_obs' == 0 {
+178.                 di as error "    ERROR: No observations after dhs selectio
+> n"
+179.                 exit 459
+180.             }
+181.             
+.             qui tab int_year
+182.             local n_dhs_final = r(r)
+183.             qui levelsof int_year, local(final_dhs_list)
+184.             di "      Final dataset: `final_obs' observations across `n_dh
+> s_final' dhs years"
+185.             di "      Census years: `final_dhs_list'"
+186.             
+.             * Display variable summary
+.             di "      Key variables in final dataset:"
+187.             foreach var in share_abn_precip avg_precip_spi {
+188.                 capture confirm variable `var'
+189.                 if !_rc {
+190.                     qui sum `var'
+191.                     di "        `var': mean=`=round(r(mean), 0.001)', sd=`
+> =round(r(sd), 0.001)'"
+192.                 }
+193.             }
+194. 
+.             di "Applying labels to the precipitation variables"
+195. 
+.             * Define age bins (must match cohort_metrics_calculator)
+.             local bin_starts "15 20 25 30 35 40"
+196.             local bin_ends   "19 24 29 34 39 44"
+197.             local bin_labels "15_19 20_24 25_29 30_34 35_39 40_44"
+198.             local n_bins : word count `bin_starts'
+199. 
+.             local broad_starts "15 30"
+200.             local broad_ends   "29 44"
+201.             local broad_labels "15_29 30_44"
+202.             local n_broad : word count `broad_starts'
+203. 
+.             label variable precip_total "Precipitation"
+204.             label variable precip_gs_total "Precipitation (growing season)
+> "
+205.             label variable precip_ngs_total "Precipitation (non-growing se
+> ason)"
+206.             label variable tot_abn_precip "Total years of abnormal precipi
+> tation"
+207.             label variable avg_precip_spi "Precipitation SPI"
+208.             label variable share_abn_precip "Share of abnormal precipitati
+> on"
+209. 
+.             foreach condition in dry wet {
+210.                 label variable tot_abn_precip_`condition' "Total number of
+>  abnormally `condition' years"
+211.                 label variable share_abn_precip_`condition' "Share of abno
+> rmally `condition' years"
+212.                 foreach season in gs ngs {
+213.                     label variable tot_abn_precip_`season' "Total years of
+>  abnormal precipitation in `season'"
+214.                     label variable tot_abn_precip_`season'_`condition' "To
+> tal number of abnormally `condition' years in `season'"
+215.                     label variable share_abn_precip_`season'_`condition' "
+> Share of abnormally `condition' years, `season'"
+216.                 }
+217.             }
+218. 
+.             foreach season in gs ngs {
+219.                 label variable avg_precip_`season'_spi "Precipitation SPI,
+>  (`season')"
+220.                 label variable share_abn_precip_`season' "Share of abnorma
+> l precipitation, (`season')"
+221.             }
+222. 
+.             * Age-bin-specific labels — fine bins
+.             forvalues i = 1/`n_bins' {
+223.                 local s : word `i' of `bin_starts'
+224.                 local e : word `i' of `bin_ends'
+225.                 local lbl : word `i' of `bin_labels'
+226. 
+.                 label variable precip_total_`lbl'     "Precipitation (ages `s
+> '-`e')"
+227.                 label variable precip_gs_total_`lbl'  "Precipitation (grow
+> ing season), ages `s'-`e'"
+228.                 label variable precip_ngs_total_`lbl' "Precipitation (non-
+> growing season), ages `s'-`e'"
+229. 
+.                 label variable avg_precip_spi_`lbl'    "Precipitation SPI, ag
+> es: (`lbl')"
+230.                 label variable share_abn_precip_`lbl'  "Share of abnormal 
+> precipitation, ages: (`lbl')"
+231.                 label variable tot_abn_precip_`lbl'    "Total years of abn
+> ormal precipitation, ages (`lbl')"
+232. 
+.                 foreach condition in dry wet {
+233.                     label variable tot_abn_precip_`condition'_`lbl'     "T
+> otal number of abnormally `condition' years, ages (`lbl')"
+234.                     label variable share_abn_precip_`condition'_`lbl'   "S
+> hare of abnormally `condition' years, ages: (`lbl')"
+235.                 }
+236.                 foreach season in gs ngs {
+237.                     label variable avg_precip_`season'_spi_`lbl'         "
+> Precipitation SPI, (`season'), ages: (`lbl')"
+238.                     label variable share_abn_precip_`season'_`lbl'       "
+> Share of abnormal precipitation, (`season'), ages: (`lbl')"
+239.                     label variable tot_abn_precip_`season'_`lbl'         "
+> Total years of abnormal precipitation, (`season'), ages (`lbl')"
+240.                     foreach condition in dry wet {
+241.                         label variable tot_abn_precip_`season'_`condition'
+> _`lbl'   "Total number of abnormally `condition' years, (`season'), ages (`lb
+> l')"
+242.                         label variable share_abn_precip_`season'_`conditio
+> n'_`lbl' "Share of abnormally `condition' years, (`season'), ages: (`lbl')"
+243.                     }
+244.                 }
+245.             }
+246. 
+.             * Age-bin-specific labels — broad bins
+.             forvalues i = 1/`n_broad' {
+247.                 local s : word `i' of `broad_starts'
+248.                 local e : word `i' of `broad_ends'
+249.                 local lbl : word `i' of `broad_labels'
+250. 
+.                 label variable precip_total_`lbl'     "Precipitation (ages `s
+> '-`e')"
+251.                 label variable precip_gs_total_`lbl'  "Precipitation (grow
+> ing season), ages `s'-`e'"
+252.                 label variable precip_ngs_total_`lbl' "Precipitation (non-
+> growing season), ages `s'-`e'"
+253. 
+.                 label variable avg_precip_spi_`lbl'    "Precipitation SPI, ag
+> es: (`lbl')"
+254.                 label variable share_abn_precip_`lbl'  "Share of abnormal 
+> precipitation, ages: (`lbl')"
+255.                 label variable tot_abn_precip_`lbl'    "Total years of abn
+> ormal precipitation, ages (`lbl')"
+256. 
+.                 foreach condition in dry wet {
+257.                     label variable tot_abn_precip_`condition'_`lbl'     "T
+> otal number of abnormally `condition' years, ages (`lbl')"
+258.                     label variable share_abn_precip_`condition'_`lbl'   "S
+> hare of abnormally `condition' years, ages: (`lbl')"
+259.                 }
+260.                 foreach season in gs ngs {
+261.                     label variable avg_precip_`season'_spi_`lbl'         "
+> Precipitation SPI, (`season'), ages: (`lbl')"
+262.                     label variable share_abn_precip_`season'_`lbl'       "
+> Share of abnormal precipitation, (`season'), ages: (`lbl')"
+263.                     label variable tot_abn_precip_`season'_`lbl'         "
+> Total years of abnormal precipitation, (`season'), ages (`lbl')"
+264.                     foreach condition in dry wet {
+265.                         label variable tot_abn_precip_`season'_`condition'
+> _`lbl'   "Total number of abnormally `condition' years, (`season'), ages (`lb
+> l')"
+266.                         label variable share_abn_precip_`season'_`conditio
+> n'_`lbl' "Share of abnormally `condition' years, (`season'), ages: (`lbl')"
+267.                     }
+268.                 }
+269.             }
+270.             label variable cohort "Cohort"
+271.             label variable DHS_code "DHS code"
+272.             label variable DHSREGEN "DHS region"
+273.             label variable int_year "DHS survey year"
+274.             label variable age_in_dhs "Age in DHS survey year"
+275.             label variable cohort_reaches_reproductive "Cohort reaches rep
+> roductive age"
+276.             label variable exposure_years "Years of exposure"
+277.             label variable full_exposure "Full exposure"
+278. 
+. 
+.             local final_file "$cf/data/derived/dhs/04-dhs-region-cohort-preci
+> pitation/`country_name'-dhs-cohort-precipitation.dta"
+279.             capture save "`final_file'", replace
+280.             if _rc != 0 {
+281.                 di as error "      ERROR: Cannot save final dataset to `fi
+> nal_file'"
+282.                 di as error "      Check directory permissions and disk sp
+> ace"
+283.                 exit 603
+284.             }
+285.             di "    ✓ Saved final dataset: `country_name'-dhs-cohort-preci
+> pitation.dta"
+286.             di "    ✓ File location: `final_file'"
+287.         }
+288. 
+.         else if "`method'" == "cleanup_temp_files" {
+289.             local files_deleted = 0
+290.             
+.             di "      Deleting temporary cohort metric files..."
+291.             foreach file in `temp_files' {
+292.                 local file_path "$cf/data/derived/dhs/04-dhs-region-cohort
+> -precipitation/03-cohort-metrics/`file'.dta"
+293.                 capture erase "`file_path'"
+294.                 if _rc == 0 {
+295.                     local ++files_deleted
+296.                     di "        Deleted: `file'.dta"
+297.                 }
+298.                 else {
+299.                     di "        WARNING: Could not delete `file'.dta"
+300.                 }
+301.             }
+302.             
+.             di "      Deleting intermediate precipitation files..."
+303.             local precip_file "$cf/data/derived/dhs/04-dhs-region-cohort-p
+> recipitation/01-annual-data/`country_name'_precip_annual.dta"
+304.             capture erase "`precip_file'"
+305.             if _rc == 0 {
+306.                 local ++files_deleted
+307.                 di "        Deleted: $cf/data/derived/dhs/04-dhs-region-co
+> hort-precipitation/01-annual-data/`country_name'_precip_annual.dta"
+308.             }
+309.             
+.             local gammafit_file "$cf/data/derived/dhs/04-dhs-region-cohort-pr
+> ecipitation/02-gammafit-data/`country_code'_gammafit.dta"
+310.             capture erase "`gammafit_file'"
+311.             if _rc == 0 {
+312.                 local ++files_deleted
+313.                 di "        Deleted: `country_code'_gammafit.dta"
+314.             }
+315.             
+.             di "      ✓ Cleanup complete: `files_deleted' temporary files rem
+> oved"
+316.         }
+317.         
+.         else if "`method'" == "diagnostic_report" {
+318.             * Diagnostic method to report on current state
+.             di "=== Diagnostic Report for `country_name' (`country_code') ===
+> "
+319.             
+.             * Check existence of key files
+.             local key_files = ""
+320.             local key_files "`key_files' $cf/data/derived/dhs/04-dhs-regio
+> n-cohort-precipitation/01-annual-data/`country_name'_precip_annual.dta"
+321.             local key_files "`key_files' $cf/data/derived/dhs/04-dhs-regio
+> n-cohort-precipitation/02-gammafit-data/`country_code'_gammafit.dta"
+322.             local key_files "`key_files' $cf/data/derived/dhs/04-dhs-regio
+> n-cohort-precipitation/`country_name'-dhs-cohort-precipitation.dta"
+323.             
+.             foreach file in `key_files' {
+324.                 capture confirm file "`file'"
+325.                 if _rc == 0 {
+326.                     di "  ✓ Found: `file'"
+327.                     use "`file'", clear
+328.                     qui count
+329.                     di "      Observations: `r(N)'"
+330.                     di "      Variables: `c(k)'"
+331.                 }
+332.                 else {
+333.                     di "  ✗ Missing: `file'"
+334.                 }
+335.             }
+336.             
+.             * Check gamma scaling diagnostics
+.             capture mkdir "$cf/figures/gammafit-scaling-logs"
+337.             local png_files: dir "$cf/figures/gammafit-scaling-logs" files
+>  "*.png"
+338.             local n_diagnostics: word count `png_files'
+339.             di "  Gamma scaling diagnostic plots: `n_diagnostics'"
+340.         }
+341.     end
+
+. 
+. ******************************
+. * EXECUTION
+. ******************************
+.     capture program drop RunPrecipitationAnalysis
+
+.     program define RunPrecipitationAnalysis
+  1.         syntax, country_codes(string) [cleanup(string) test_mode(string)]
+  2.         
+.         /*
+>         Program: RunPrecipitationAnalysis
+>         Description: Main execution function that runs the complete precipita
+> tion analysis pipeline
+>         Parameters:
+>             country_codes: Space-separated list of country codes to process
+>             cleanup: "true" to remove temporary files after processing (optio
+> nal)
+>             test_mode: "true" to run in test mode with limited countries (opt
+> ional)
+>         */
+.         
+.         di ""
+  3.         di "==============================================="
+  4.         di "PRECIPITATION ANALYSIS PIPELINE EXECUTION"
+  5.         di "==============================================="
+  6.         di "Start time: $S_TIME, $S_DATE"
+  7.         di ""
+  8.         
+.         * Initialize configuration
+.         //ClimateAnalysisConfig, method("init")
+.         
+.         * Process countries
+.         local total_countries : word count `country_codes'
+  9.         di "Processing `total_countries' countries"
+ 10.         di "Countries: `country_codes'"
+ 11.         di ""
+ 12.         
+.         local country_num = 0
+ 13.         local countries_completed ""
+ 14.         local countries_failed ""
+ 15.         
+.         foreach country_code in `country_codes' {
+ 16.             local ++country_num
+ 17.             
+.             * Get country name for display
+.             GetCountryName, code("`country_code'")
+ 18.             local country_name "`r(name)'"
+ 19.             
+.             di "=============================================================
+> ==============="
+ 20.             di "COUNTRY `country_num'/`total_countries': `country_name' (`
+> country_code')"
+ 21.             di "==========================================================
+> =================="
+ 22.             
+.             * Run the full analysis pipeline
+.             capture noisily {
+ 23.                 PrecipitationAnalysisWorkflow, ///
+>                     method("run_full_analysis") ///
+>                     country_code("`country_code'") ///
+>                     cleanup("`cleanup'")
+ 24.             }
+ 25.             
+.             if _rc == 0 {
+ 26.                 local countries_completed "`countries_completed' `country_
+> code'"
+ 27.                 di "✓ SUCCESS: `country_name' (`country_code') completed"
+ 28.             }
+ 29.             else {
+ 30.                 local countries_failed "`countries_failed' `country_code'"
+ 31.                 di "✗ FAILED: `country_name' (`country_code') - Error code
+> : `_rc'"
+ 32.                 
+.                 * Provide specific error messages
+.                 if _rc == 601 {
+ 33.                     di "  > File not found error - check data paths"
+ 34.                 }
+ 35.                 else if _rc == 459 {
+ 36.                     di "  > No observations/data error"
+ 37.                 }
+ 38.                 else if _rc == 111 {
+ 39.                     di "  > Variable not found error"
+ 40.                 }
+ 41.                 else if _rc == 198 {
+ 42.                     di "  > Invalid syntax or country code"
+ 43.                 }
+ 44.                 else {
+ 45.                     di "  > Unknown error - check log for details"
+ 46.                 }
+ 47.             }
+ 48.             di ""
+ 49.         }
+ 50.         
+.         * Generate summary report
+.         local completed_count : word count `countries_completed'
+ 51.         local failed_count : word count `countries_failed'
+ 52.         
+.         di "==============================================="
+ 53.         di "PIPELINE EXECUTION COMPLETE"
+ 54.         di "==============================================="
+ 55.         di "Completion time: $S_TIME, $S_DATE"
+ 56.         di ""
+ 57.         di "SUMMARY:"
+ 58.         di "  Successful: `completed_count'/`total_countries' countries"
+ 59.         di "  Failed:     `failed_count'/`total_countries' countries"
+ 60.         di ""
+ 61.         
+.         if `completed_count' > 0 {
+ 62.             di "SUCCESSFULLY COMPLETED COUNTRIES:"
+ 63.             foreach country_code in `countries_completed' {
+ 64.                 GetCountryName, code("`country_code'")
+ 65.                 di "  ✓ `r(name)' (`country_code')"
+ 66.             }
+ 67.             di ""
+ 68.             
+.             * Generate Gamma Scaling Summary Table
+.             di "Generating gamma scaling summary table..."
+ 69.             capture noisily GenerateGammaScalingTable
+ 70.             if _rc == 0 {
+ 71.                 di "✓ Gamma scaling table saved to: $cf_overleaf/table/dhs
+> _gamma_scaling_summary.tex"
+ 72.             }
+ 73.             else {
+ 74.                 di "WARNING: Could not generate gamma scaling table"
+ 75.             }
+ 76.             
+.         }
+ 77. 
+.         * Report on gamma fitting failures
+.             capture confirm file "$cf/data/derived/dhs/04-dhs-region-cohort-p
+> recipitation/02-gammafit-data/gamma_fitting_failures.dta"
+ 78.             if _rc == 0 {
+ 79.                 preserve
+ 80.                     use "$cf/data/derived/dhs/04-dhs-region-cohort-precipi
+> tation/02-gammafit-data/gamma_fitting_failures.dta", clear
+ 81.                     qui count
+ 82.                     di "  Total DHS units with fitting failures: `r(N)'"
+ 83.                     di "  Failure log saved to: $cf/data/derived/dhs/04-dh
+> s-region-cohort-precipitation/02-gammafit-data/gamma_fitting_failures.dta"
+ 84.                 restore
+ 85.             }
+ 86.             else {
+ 87.                 di "  No gamma fitting failures across all countries"
+ 88.             }
+ 89.         
+.         if `failed_count' > 0 {
+ 90.             di "FAILED COUNTRIES:"
+ 91.             foreach country_code in `countries_failed' {
+ 92.                 GetCountryName, code("`country_code'")
+ 93.                 di "  ✗ `r(name)' (`country_code')"
+ 94.             }
+ 95.             di ""
+ 96.             
+.             di "TROUBLESHOOTING TIPS:"
+ 97.             di "1. Check that all required data files exist:"
+ 98.             di "   - ERA data: $cf/data/derived/dhs/02-dhs-region-daily-da
+> ta/`country_name'-era-dhs-region-day-1940-2023.dta"
+ 99.             di  "   - Phenology: $cf/data/derived/fao/crop-phenology/crop-
+> phenology-summary-stats.csv"
+100.             di "   - DHS: $cf/data/derived/ipums/country-dhs-years-mapping
+> .dta"
+101.             di "   - Cohort: $cf/data/derived/dhs/00-dhs-country-surveyyea
+> r-mappings/dhs-cohort-year.dta"
+102.             di "2. Verify country names match exactly in phenology and DHS
+>  files"
+103.             di "3. Check that directories exist and have write permissions
+> "
+104.             di "4. Run individual countries to identify specific issues"
+105.         }
+106.         
+.         di ""
+107.         di "OUTPUTS GENERATED:"
+108.         di "  - Country-level precipitation datasets: $cf/data/derived/dhs
+> /04-dhs-region-cohort-precipitation/"
+109.         di "  - Gamma scaling statistics: $cf/data/derived/dhs/04-dhs-regi
+> on-cohort-precipitation/02-gammafit-data/gamma_scaling_statistics.dta"
+110.         di "  - Gamma scaling LaTeX table: $cf_overleaf/table/dhs_gamma_sc
+> aling_summary.tex"
+111.         di ""
+112.         di "==============================================="
+113.     end
+
+. 
+. 
+. 
+. * MAIN EXECUTION - UNCOMMENT TO RUN
+. *****************************************************************************
+> ***
+. 
+.     * ---- Log file ----
+.     * Preferred location: alongside the per-country output files.
+.     * Fallback: system temp directory — needed on Windows when Dropbox is
+.     * configured as a network share, which causes Stata r(633) "may not
+.     * write files over Internet" on log using with a UNC/network path.
+.     local dm11b_logfname "cf-ssa-dm-11b-precip-genvar.log"
+
+.     local dm11b_logdir   "$cf/data/derived/dhs/04-dhs-region-cohort-precipita
+> tion"
+
+.     capture mkdir "`dm11b_logdir'"
+
+.     cap log close precip_genvar
+
+.     capture log using "`dm11b_logdir'/`dm11b_logfname'", replace name(precip_
+> genvar) text
+
+.     if _rc == 633 {
+.         * Network path not writable by Stata — redirect to system temp dir
+.         local dm11b_logdir "`c(tmpdir)'"
+.         log using "`dm11b_logdir'/`dm11b_logfname'", replace name(precip_genv
+> ar) text
+.         di as result "Note: Dropbox path not writable from this machine (r(63
+> 3))."
+.         di as result "      Log redirected to: `dm11b_logdir'/`dm11b_logfname
+> '"
+.     }
+
+.     else if _rc {
+.         di as error "Warning: Could not open log file (r(`_rc')). Continuing 
+> without log."
+.     }
+
+.     di as result "Log: `dm11b_logdir'/`dm11b_logfname'"
+Log: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation/cf-ssa-dm-1
+> 1b-precip-genvar.log
+
+.     di as result "Run date: `c(current_date)' `c(current_time)'"
+Run date: 18 Mar 2026 14:57:52
+
+. 
+.     * Example 1: Full production run
+.     RunPrecipitationAnalysis, ///
+>         country_codes("IVC") ///
+>         cleanup("true")
+
+===============================================
+PRECIPITATION ANALYSIS PIPELINE EXECUTION
+===============================================
+Start time: 14:57:52, 18 Mar 2026
+
+Processing 1 countries
+Countries: IVC
+
+============================================================================
+COUNTRY 1/1: Ivory Coast (IVC)
+============================================================================
+
+=== Starting precipitation analysis for Ivory Coast (IVC) ===
+=== With Robust Gamma Fitting (Automatic Scaling) ===
+  Checking DHS mapping file: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattara
+> i/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/00-dhs-country-surveyy
+> ear-mappings/surveycd_reg_year.dta
+  DHS file has 1070 total records
+  Keeping only the records for Cote d'Ivoire
+(1,065 observations deleted)
+1994 1998 1999 2011 2012
+  Found 5 dhs years: 1994 1998 1999 2011 2012
+
+STEP 1: Loading and processing ERA precipitation data...
+=== Starting precipitation data processing for Ivory Coast (IVC) ===
+  Loading ERA data for Ivory Coast (IVC)...
+     Looking for data file: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai
+> /Climate_Change_and_Fertility_in_SSA/data/derived/dhs/02-dhs-region-daily-dat
+> a/Ivory Coast-era-dhs-region-day-1940-2023.dta
+    Loaded 30681 observations
+   Keeping variables we need
+(0 observations deleted)
+   Preparing to merge with crop phenology data
+dhsreg_decoded: contains nonnumeric characters; no replace
+ERA data loaded successfully. Proceeding to merge crop phenology data
+    Looking for phenology file: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhatt
+> arai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/03-dhs-fao-growing-
+> season/dhs-crop-phenology-summary-stats.csv
+(36 vars, 207 obs)
+    Loaded 207 observations from phenology data
+   Looking for phenology data for: Ivory Coast
+(206 observations deleted)
+    Found phenology data for Ivory Coast with 1 observations
+file /var/folders/9x/j_ynjyrx41v6y0j2n63nnk8c0000gn/T//St30771.000003 saved
+   Merging ERA and phenology data ...
+(note: variable DHSREGEN was str13, now str30 to accommodate using data's
+       values)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                            30,681  (_merge==3)
+    -----------------------------------------
+ Examining merge success ...
+
+                 _merge |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+            matched (3) |     30,681      100.00      100.00
+------------------------+-----------------------------------
+                  Total |     30,681      100.00
+  ✓ MERGE PERFECT: all 30681 obs matched (no ERA-only or phenology-only rows)
+   Creating growing and non-growing season indicators ...
+(2,604 real changes made)
+(0 real changes made)
+(2,373 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(0 real changes made)
+(2,520 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(2,520 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(2,520 real changes made)
+(0 real changes made)
+(0 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+(2,520 real changes made)
+(2,604 real changes made)
+(0 real changes made)
+    ✓ Decomposition identity holds: precip = precip_gs + precip_ngs (all 30681 
+> obs)
+    Growing season precip - Mean: 2.28369764838135, SD: 3.442543174096132
+    Non-growing season precip - Mean: 1.253166935085074, SD: 2.449431031133652
+  Seasonal variables created successfully
+Aggregating data to annual level ...
+    Annual data has 84 observations
+    Saving annual data to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/
+> Climate_Change_and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-cohort-pre
+> cipitation/01-annual-data/Ivory Coast_precip_annual.dta
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation/01-annual-d
+> ata/Ivory Coast_precip_annual.dta saved
+  Annual aggregation completed successfully
+
+=== Precipitation data processing completed successfully ===
+    Final annual dataset: 84 observations
+    Country: Ivory Coast
+    /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fert
+> ility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation/01-annual-da
+> ta/Ivory Coast_precip_annual.dta
+    precip: mean=1291.8, sd=152.8
+    precip_gs: mean=834.1, sd=117.6
+    precip_ngs: mean=457.7, sd=63.40000000000001
+  ✓ STEP 1 completed successfully
+
+STEP 2: Fitting gamma distributions with automatic scaling...
+=== Starting gamma distribution fitting for Ivory Coast (IVC) ===
+=== Using robust scaling (1x → 1/10 → 1/100) ===
+   Creating gamma fit dataset with scaling ...
+    Loaded 84 annual observations for gamma fitting
+Starting gamma distribution fitting process with scaling
+ Validating inputs for gamma distribution fitting ...
+Checking for missing values
+Checking for negative values
+Checking for missing values
+Checking for negative values
+Checking for missing values
+Checking for negative values
+  Validation passed
+  Initializing gamma distribution variables...
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+    Creating variables for: precip
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+    Creating variables for: precip_gs
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+    Creating variables for: precip_ngs
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+(84 missing values generated)
+  Gamma variables initialized successfully
+Fitting gamma distributions by geographic unit ...
+   Processing 1 geographic units
+     Variable: precip
+Initialize variable-specific counters
+Fit gamma with scaling
+Create temporary variable for scaling
+Starting iterations ...
+          Attempt 1: Using original scale
+          SUCCESS: Gamma fit converged with scaling factor 1/1
+Gamma fitting successful, setting up trackers for success by scale level
+Track success by scale level
+Store gamma parameters
+Store statistics for EACH variable in globals
+Saved total regions: 1
+Saved unscaled successes: 1
+Saved scale/10 successes: 0
+Saved scale/100 successes: 0
+Saved total failures: 0
+Report variable-specific results
+        Original scale: 1/1
+        Scale/10:       0/1
+        Scale/100:      0/1
+        Failed all:     0/1
+     Variable: precip_gs
+Initialize variable-specific counters
+Fit gamma with scaling
+Create temporary variable for scaling
+Starting iterations ...
+          Attempt 1: Using original scale
+          SUCCESS: Gamma fit converged with scaling factor 1/1
+Gamma fitting successful, setting up trackers for success by scale level
+Track success by scale level
+Store gamma parameters
+Store statistics for EACH variable in globals
+Saved total regions: 1
+Saved unscaled successes: 1
+Saved scale/10 successes: 0
+Saved scale/100 successes: 0
+Saved total failures: 0
+Report variable-specific results
+        Original scale: 1/1
+        Scale/10:       0/1
+        Scale/100:      0/1
+        Failed all:     0/1
+     Variable: precip_ngs
+Initialize variable-specific counters
+Fit gamma with scaling
+Create temporary variable for scaling
+Starting iterations ...
+          Attempt 1: Using original scale
+          SUCCESS: Gamma fit converged with scaling factor 1/1
+Gamma fitting successful, setting up trackers for success by scale level
+Track success by scale level
+Store gamma parameters
+Store statistics for EACH variable in globals
+Saved total regions: 1
+Saved unscaled successes: 1
+Saved scale/10 successes: 0
+Saved scale/100 successes: 0
+Saved total failures: 0
+Report variable-specific results
+        Original scale: 1/1
+        Scale/10:       0/1
+        Scale/100:      0/1
+        Failed all:     0/1
+(83 observations deleted)
+
+  ============================================
+  GAMMA FITTING SUMMARY
+  ============================================
+  Total geographic units: 1
+  --- precip ---
+    Success (original):  1
+    Success (scale/10):  0
+    Success (scale/100): 0
+    Failed at all:       0
+  --- precip_gs ---
+    Success (original):  1
+    Success (scale/10):  0
+    Success (scale/100): 0
+    Failed at all:       0
+  --- precip_ngs ---
+    Success (original):  1
+    Success (scale/10):  0
+    Success (scale/100): 0
+    Failed at all:       0
+  ============================================
+ Gamma distribution fitting with scaling completed successfully.
+   Saving gamma fit results to : /Users/prayogbhattarai/NUS Dropbox/Prayog Bhat
+> tarai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-coho
+> rt-precipitation/02-gammafit-data/IVC_gammafit.dta
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation/02-gammafit
+> -data/IVC_gammafit.dta saved
+ Gamma fit dataset created successfully
+
+=== Gamma distribution fitting completed successfully ===
+    Output: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_
+> and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation/02-g
+> ammafit-data/IVC_gammafit.dta
+    Total observations: 84
+(83 observations deleted)
+    Alpha (shape): mean=54.465, sd=.
+    Beta (scale): mean=8.4, sd=.
+    precip_spi: mean=0, sd=1.005
+    precip_gs_spi: mean=0, sd=1.005
+    precip_ngs_spi: mean=0, sd=1.005
+    Abnormal wet years: 13.1%
+    Abnormal dry years: 13.1%
+  ✓ STEP 2 completed successfully
+number of observations (_N) was 0, now 1
+(note: variable n_regions was float, now double to accommodate using data's
+       values)
+(note: variable precip_success_original was float, now double to accommodate
+       using data's values)
+(note: variable precip_success_scale10 was float, now double to accommodate
+       using data's values)
+(note: variable precip_success_scale100 was float, now double to accommodate
+       using data's values)
+(note: variable precip_fail_all was float, now double to accommodate using
+       data's values)
+(note: variable precip_pct_original was float, now double to accommodate
+       using data's values)
+(note: variable precip_pct_scale10 was float, now double to accommodate using
+       data's values)
+(note: variable precip_pct_scale100 was float, now double to accommodate
+       using data's values)
+(note: variable precip_pct_failed was float, now double to accommodate using
+       data's values)
+(note: variable precip_gs_success_original was float, now double to
+       accommodate using data's values)
+(note: variable precip_gs_success_scale10 was float, now double to
+       accommodate using data's values)
+(note: variable precip_gs_success_scale100 was float, now double to
+       accommodate using data's values)
+(note: variable precip_gs_fail_all was float, now double to accommodate using
+       data's values)
+(note: variable precip_gs_pct_original was float, now double to accommodate
+       using data's values)
+(note: variable precip_gs_pct_scale10 was float, now double to accommodate
+       using data's values)
+(note: variable precip_gs_pct_scale100 was float, now double to accommodate
+       using data's values)
+(note: variable precip_gs_pct_failed was float, now double to accommodate
+       using data's values)
+(note: variable precip_ngs_success_original was float, now double to
+       accommodate using data's values)
+(note: variable precip_ngs_success_scale10 was float, now double to
+       accommodate using data's values)
+(note: variable precip_ngs_success_scale100 was float, now double to
+       accommodate using data's values)
+(note: variable precip_ngs_fail_all was float, now double to accommodate
+       using data's values)
+(note: variable precip_ngs_pct_original was float, now double to accommodate
+       using data's values)
+(note: variable precip_ngs_pct_scale10 was float, now double to accommodate
+       using data's values)
+(note: variable precip_ngs_pct_scale100 was float, now double to accommodate
+       using data's values)
+(note: variable precip_ngs_pct_failed was float, now double to accommodate
+       using data's values)
+file /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Change_and_Fer
+> tility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation/02-gammafit
+> -data/gamma_scaling_statistics.dta saved
+  Gamma scaling statistics saved for Ivory Coast
+(83 observations deleted)
+(1 observation deleted)
+  No gamma fitting failures to log for Ivory Coast
+
+STEP 3: Processing cohort metrics by dhs year...
+    Census 1/5: 1994
+(870 observations deleted)
+(0 observations deleted)
+      Cohort-year combinations: 1185
+      Joining with precipitation data
+      Verifying cohort-year counts...
+      ✓ Cohort-year count validation passed (max: 30 years)
+    Calculating cohort metrics for dhs 1994
+      Starting with 1185 observations
+      Generating age variables ...
+      Merging with gamma fit results (including scaling indicators)
+      Collapsing to cohort level...
+Calculating shares...
+      Validating tot_abn_precip bounds...
+      ✓ tot_abn_precip validation passed (max: 14)
+      Validating share_abn_precip bounds...
+      ✓ share_abn_precip validation passed (max: .4666666686534882)
+    Cohort metrics saved (55 observations)
+      ✓ Census 1994 processed successfully
+    Census 2/5: 1998
+(750 observations deleted)
+(0 observations deleted)
+      Cohort-year combinations: 1305
+      Joining with precipitation data
+      Verifying cohort-year counts...
+      ✓ Cohort-year count validation passed (max: 30 years)
+    Calculating cohort metrics for dhs 1998
+      Starting with 1305 observations
+      Generating age variables ...
+      Merging with gamma fit results (including scaling indicators)
+      Collapsing to cohort level...
+Calculating shares...
+      Validating tot_abn_precip bounds...
+      ✓ tot_abn_precip validation passed (max: 14)
+      Validating share_abn_precip bounds...
+      ✓ share_abn_precip validation passed (max: .4666666686534882)
+    Cohort metrics saved (59 observations)
+      ✓ Census 1998 processed successfully
+    Census 3/5: 1999
+(720 observations deleted)
+(0 observations deleted)
+      Cohort-year combinations: 1335
+      Joining with precipitation data
+      Verifying cohort-year counts...
+      ✓ Cohort-year count validation passed (max: 30 years)
+    Calculating cohort metrics for dhs 1999
+      Starting with 1335 observations
+      Generating age variables ...
+      Merging with gamma fit results (including scaling indicators)
+      Collapsing to cohort level...
+Calculating shares...
+      Validating tot_abn_precip bounds...
+      ✓ tot_abn_precip validation passed (max: 14)
+      Validating share_abn_precip bounds...
+      ✓ share_abn_precip validation passed (max: .4666666686534882)
+    Cohort metrics saved (60 observations)
+      ✓ Census 1999 processed successfully
+    Census 4/5: 2011
+(360 observations deleted)
+(0 observations deleted)
+      Cohort-year combinations: 1695
+      Joining with precipitation data
+      Verifying cohort-year counts...
+      ✓ Cohort-year count validation passed (max: 30 years)
+    Calculating cohort metrics for dhs 2011
+      Starting with 1695 observations
+      Generating age variables ...
+      Merging with gamma fit results (including scaling indicators)
+      Collapsing to cohort level...
+Calculating shares...
+      Validating tot_abn_precip bounds...
+      ✓ tot_abn_precip validation passed (max: 14)
+      Validating share_abn_precip bounds...
+      ✓ share_abn_precip validation passed (max: .4666666686534882)
+    Cohort metrics saved (72 observations)
+      ✓ Census 2011 processed successfully
+    Census 5/5: 2012
+(330 observations deleted)
+(0 observations deleted)
+      Cohort-year combinations: 1725
+      Joining with precipitation data
+      Verifying cohort-year counts...
+      ✓ Cohort-year count validation passed (max: 30 years)
+    Calculating cohort metrics for dhs 2012
+      Starting with 1725 observations
+      Generating age variables ...
+      Merging with gamma fit results (including scaling indicators)
+      Collapsing to cohort level...
+Calculating shares...
+      Validating tot_abn_precip bounds...
+      ✓ tot_abn_precip validation passed (max: 14)
+      Validating share_abn_precip bounds...
+      ✓ share_abn_precip validation passed (max: .4666666686534882)
+    Cohort metrics saved (73 observations)
+      ✓ Census 2012 processed successfully
+  ✓ STEP 3 completed: 5 dhs years processed
+
+STEP 4: Combining dhs datasets and applying selection criteria...
+    Combining dhs datasets...
+      Loaded first file: 55 observations
+      Appending 4 additional files...
+      Combined total: 319 observations
+(5 observations deleted)
+      Dropped 5 observations with missing key variables
+      Clean observations: 314
+    Applying dhs selection criteria...
+(0 real changes made)
+      Cohorts with full 30-year exposure: 169
+      Final dataset: 314 observations across 5 dhs years
+      Census years: 1994 1998 1999 2011 2012
+      Key variables in final dataset:
+        share_abn_precip: mean=.232, sd=.147
+        avg_precip_spi: mean=.289, sd=.291
+Applying labels to the precipitation variables
+    ✓ Saved final dataset: Ivory Coast-dhs-cohort-precipitation.dta
+    ✓ File location: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climat
+> e_Change_and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipita
+> tion/Ivory Coast-dhs-cohort-precipitation.dta
+  ✓ STEP 4 completed successfully
+
+STEP 5: Cleaning up temporary files...
+      Deleting temporary cohort metric files...
+        Deleted: IVC_metrics_1994.dta
+        Deleted: IVC_metrics_1998.dta
+        Deleted: IVC_metrics_1999.dta
+        Deleted: IVC_metrics_2011.dta
+        Deleted: IVC_metrics_2012.dta
+      Deleting intermediate precipitation files...
+        Deleted: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Climate_Ch
+> ange_and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precipitation
+> /01-annual-data/Ivory Coast_precip_annual.dta
+        Deleted: IVC_gammafit.dta
+      ✓ Cleanup complete: 7 temporary files removed
+  ✓ Temporary files cleaned up
+
+=== Analysis complete for Ivory Coast (IVC) ===
+✓ SUCCESS: Ivory Coast (IVC) completed
+
+===============================================
+PIPELINE EXECUTION COMPLETE
+===============================================
+Completion time: 14:57:58, 18 Mar 2026
+
+SUMMARY:
+  Successful: 1/1 countries
+  Failed:     0/1 countries
+
+SUCCESSFULLY COMPLETED COUNTRIES:
+  ✓ Ivory Coast (IVC)
+
+Generating gamma scaling summary table...
+
+Duplicates in terms of country
+
+(415 observations deleted)
+Gamma scaling LaTeX table saved to: /Users/prayogbhattarai/NUS Dropbox/Prayog B
+> hattarai/Apps/Overleaf/climate-fertility-ssa/output/table/dhs_gamma_scaling_s
+> ummary.tex
+  Cumulative Failure Rates:
+  --- precip ---
+    Failed at 1x:    2.9%
+    Failed at /10:   0%
+    Failed at /100:  0%
+  --- precip_gs ---
+    Failed at 1x:    7.2%
+    Failed at /10:   6.300000000000001%
+    Failed at /100:  6.300000000000001%
+  --- precip_ngs ---
+    Failed at 1x:    7.2%
+    Failed at /10:   2.9%
+    Failed at /100:  2.4%
+✓ Gamma scaling table saved to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhatt
+> arai/Apps/Overleaf/climate-fertility-ssa/output/table/dhs_gamma_scaling_summa
+> ry.tex
+  Total DHS units with fitting failures: 18
+  Failure log saved to: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattarai/Cli
+> mate_Change_and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-cohort-precip
+> itation/02-gammafit-data/gamma_fitting_failures.dta
+
+OUTPUTS GENERATED:
+  - Country-level precipitation datasets: /Users/prayogbhattarai/NUS Dropbox/Pr
+> ayog Bhattarai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/04-dhs-re
+> gion-cohort-precipitation/
+  - Gamma scaling statistics: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhattar
+> ai/Climate_Change_and_Fertility_in_SSA/data/derived/dhs/04-dhs-region-cohort-
+> precipitation/02-gammafit-data/gamma_scaling_statistics.dta
+  - Gamma scaling LaTeX table: /Users/prayogbhattarai/NUS Dropbox/Prayog Bhatta
+> rai/Apps/Overleaf/climate-fertility-ssa/output/table/dhs_gamma_scaling_summar
+> y.tex
+
+===============================================
+
+. 
+.     // * Example 2: Test run with 3 countries
+.     // RunPrecipitationAnalysis, ///
+.     //     country_codes("BEN SEN ETH) ///
+.     //     cleanup("true")
+. 
+.     * Example 3: Single country for debugging
+.     // RunPrecipitationAnalysis, ///
+.     //     country_codes("BEN")
+. 
+.     cap log close precip_genvar
+
+. 
+end of do-file
